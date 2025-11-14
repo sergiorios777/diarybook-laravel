@@ -66,19 +66,37 @@ class CategoryController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Muestra el formulario para editar una categoría existente.
+     * * Laravel automáticamente encontrará la $category usando su ID (Route Model Binding).
      */
-    public function edit(string $id)
+    public function edit(string $id): View
     {
-        //
+        // Necesitamos todas las categorías para el dropdown de "Categoría Padre"
+        // Excluimos la categoría actual, ya que no puede ser padre de sí misma.
+        $categories = Category::where('id', '!=', $category->id)->orderBy('name')->get();
+
+        // Pasamos la categoría específica Y la lista de categorías a la vista
+        return view('categories.edit', compact('category', 'categories'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza la categoría en la base de datos.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id): RedirectResponse
     {
-        //
+        // 1. Validación (similar a 'store', pero 'name' puede ser único)
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:ingreso,gasto',
+            'parent_id' => 'nullable|exists:categories,id'
+        ]);
+
+        // 2. Actualizamos el modelo
+        $category->update($validatedData);
+
+        // 3. Redirección
+        return redirect()->route('categorias.index')
+                         ->with('success', '¡Categoría actualizada con éxito!');
     }
 
     /**
