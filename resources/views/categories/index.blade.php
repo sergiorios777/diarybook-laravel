@@ -42,7 +42,8 @@
     <nav class="navbar">
         <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
         <div>
-            <a href="{{ route('transactions.index') }}">Ver Historial</a>
+            <a href="{{ route('reports.index') }}">Informes</a>
+            <a href="{{ route('transactions.index') }}">Historial</a>
             <a href="{{ route('categorias.index') }}">Categorías</a>
             <a href="{{ route('cuentas.index') }}">Cuentas</a>
             <a href="{{ route('transactions.create') }}" class="btn">+ Nueva Transacción</a>

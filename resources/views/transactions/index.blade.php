@@ -6,6 +6,9 @@
     <title>Historial de Transacciones</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .navbar { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { text-decoration: none; color: #333; font-weight: bold; margin: 0 10px; }
+        .navbar a.btn { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 4px; }
         .container { max-width: 900px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         h1 { margin-top: 0; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -17,7 +20,16 @@
     </style>
 </head>
 <body>
-
+    <nav class="navbar">
+        <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
+        <div>
+            <a href="{{ route('reports.index') }}">Informes</a>
+            <a href="{{ route('transactions.index') }}">Historial</a>
+            <a href="{{ route('categorias.index') }}">Categorías</a>
+            <a href="{{ route('cuentas.index') }}">Cuentas</a>
+            <a href="{{ route('transactions.create') }}" class="btn">+ Nueva Transacción</a>
+        </div>
+    </nav>
     <div class="container">
         <h1>Historial de Movimientos</h1>
 
