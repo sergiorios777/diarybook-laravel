@@ -42,7 +42,9 @@
     <nav class="navbar">
         <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
         <div>
-            <a href="{{ route('reports.index') }}">Informes</a>
+            <a href="{{ route('reports.expenses') }}">Informe Gastos</a>
+            <a href="{{ route('reports.income') }}">Informe Ingresos</a>
+            
             <a href="{{ route('transactions.index') }}">Historial</a>
             <a href="{{ route('categorias.index') }}">Categorías</a>
             <a href="{{ route('cuentas.index') }}">Cuentas</a>

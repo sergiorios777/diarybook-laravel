@@ -10,8 +10,11 @@ use App\Http\Controllers\ReportController;
 // --- RUTA DEL DASHBOARD ---
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-// --- NUEVA RUTA DE INFORMES ---
-Route::get('/informes', [ReportController::class, 'index'])->name('reports.index');
+// --- RUTAS DE INFORMES ---
+// Renombramos la ruta de gastos para ser específica
+Route::get('/informes/gastos', [ReportController::class, 'expenses'])->name('reports.expenses');
+// Creamos la nueva ruta de ingresos
+Route::get('/informes/ingresos', [ReportController::class, 'income'])->name('reports.income');
 
 // --- RUTAS DE GESTIÓN (CRUD) ---
 Route::resource('categorias', CategoryController::class)->parameters(['categorias' => 'category']);
