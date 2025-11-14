@@ -17,8 +17,11 @@
 
     <h1>Editar Categoría: {{ $category->name }}</h1>
 
-    <form action="{{ route('categorias.update', $category->id) }}" method="POST">
-        @csrf @method('PUT') <div>
+    <form action="{{ route('categorias.update', $category) }}" method="POST">
+        @csrf
+        @method('PUT')
+        
+        <div>
             <label for="name">Nombre de la Categoría:</label>
             <input type="text" id="name" name="name" value="{{ old('name', $category->name) }}" required>
         </div>

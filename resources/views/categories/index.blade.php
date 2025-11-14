@@ -19,6 +19,22 @@
         .badge { font-size: 0.8em; padding: 3px 8px; border-radius: 10px; color: white; }
         .badge-ingreso { background-color: #28a745; }
         .badge-gasto { background-color: #dc3545; }
+
+        .btn-edit {
+            font-size: 0.9em;
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+        .btn-delete {
+            font-size: 0.9em;
+            color: #dc3545;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -54,7 +70,18 @@
                             {{ $category->type }}
                         </span>
                     </div>
-                    <a href="#">Editar</a> 
+                    <div>
+                        <a href="{{ route('categorias.edit', $category->id) }}" class="btn-edit">
+                            Editar
+                        </a>
+                        <form action="{{ route('categorias.destroy', $category->id) }}" method="POST" style="display: inline-block;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-delete" onclick="return confirm('¿Estás seguro de que quieres eliminar esta categoría?')">
+                                Eliminar
+                            </button>
+                        </form>
+                    </div>
                 </li>
                 
                 @if($category->children->isNotEmpty())
@@ -67,7 +94,18 @@
                                     {{ $child->type }}
                                 </span>
                             </div>
-                            <a href="#">Editar</a>
+                            <div>
+                                <a href="{{ route('categorias.edit', $child->id) }}" class="btn-edit">
+                                    Editar
+                                </a>
+                                <form action="{{ route('categorias.destroy', $child->id) }}" method="POST" style="display: inline-block;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-delete" onclick="return confirm('¿Estás seguro de que quieres eliminar esta categoría?')">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </div>
                         </li>
                         @endforeach
                     </ul>

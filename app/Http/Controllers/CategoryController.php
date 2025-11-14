@@ -69,7 +69,7 @@ class CategoryController extends Controller
      * Muestra el formulario para editar una categoría existente.
      * * Laravel automáticamente encontrará la $category usando su ID (Route Model Binding).
      */
-    public function edit(string $id): View
+    public function edit(Category $category): View
     {
         // Necesitamos todas las categorías para el dropdown de "Categoría Padre"
         // Excluimos la categoría actual, ya que no puede ser padre de sí misma.
@@ -82,7 +82,7 @@ class CategoryController extends Controller
     /**
      * Actualiza la categoría en la base de datos.
      */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(Request $request, Category $category): RedirectResponse
     {
         // 1. Validación (similar a 'store', pero 'name' puede ser único)
         $validatedData = $request->validate([
@@ -100,10 +100,20 @@ class CategoryController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina la categoría de la base de datos.
      */
-    public function destroy(string $id)
+    public function destroy(Category $category): RedirectResponse
     {
-        //
+        // Gracias a nuestras reglas 'onDelete('set null')' en las migraciones:
+        // 1. Si borramos una categoría padre, sus hijos (subcategorías)
+        //    simplemente se convertirán en categorías padre (parent_id = null).
+        // 2. Las transacciones que usaban esta categoría NO se borran,
+        //    simplemente quedarán como "Sin Categoría" (category_id = null).
+        // ¡Es seguro borrar!
+
+        $category->delete();
+
+        return redirect()->route('categorias.index')
+                         ->with('success', '¡Categoría eliminada con éxito!');
     }
 }
