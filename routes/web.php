@@ -13,9 +13,4 @@ Route::resource('categorias', CategoryController::class)->parameters(['categoria
 Route::resource('transactions', TransactionController::class)->only([
     'index', 'create', 'store'
 ]);
-
-/*
-Route::get('/', function () {
-    return view('welcome');
-});
-*/
+Route::resource('cuentas', AccountController::class);
