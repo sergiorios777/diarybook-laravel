@@ -20,5 +20,5 @@ Route::get('/informes/ingresos', [ReportController::class, 'income'])->name('rep
 Route::resource('categorias', CategoryController::class)->parameters(['categorias' => 'category']);
 Route::resource('cuentas', AccountController::class)->parameters(['cuentas' => 'account']);
 Route::resource('transactions', TransactionController::class)->only([
-    'index', 'create', 'store'
+    'index', 'create', 'store', 'edit', 'update', 'destroy'
 ]);

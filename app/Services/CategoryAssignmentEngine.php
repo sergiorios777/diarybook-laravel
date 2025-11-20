@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\CategorizatonRule;
+use App\Models\CategorizationRule;
 use App\Models\Category;
 use Illuminate\Support\Str;
 

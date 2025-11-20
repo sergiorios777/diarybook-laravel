@@ -104,4 +104,92 @@ class TransactionController extends Controller
             ->route('transactions.create')
             ->with('success', '¡Transacción registrada con éxito!');
     }
+
+    /**
+     * Muestra el formulario para editar una transacción existente.
+     */
+    public function edit(Transaction $transaction): View
+    {
+        $accounts = Account::all();
+        $categories = Category::orderBy('name')->get();
+        
+        // Pasamos las reglas al frontend para que el autocompletado funcione 
+        // incluso si el usuario decide cambiar la descripción durante la edición.
+        // Mapeamos igual que hiciste en tu vista create.
+        $rules = \App\Models\CategorizationRule::all()->map(function($r) {
+            return [
+                'keyword' => $r->keyword ? strtolower($r->keyword) : null,
+                'regex'   => $r->regex,
+                'cat_id'  => $r->category_id,
+                'type'    => $r->type
+            ];
+        })->filter()->values();
+
+        return view('transactions.edit', compact('transaction', 'accounts', 'categories', 'rules'));
+    }
+
+    /**
+     * Actualiza la transacción en la base de datos.
+     */
+    public function update(Request $request, Transaction $transaction): RedirectResponse
+    {
+        // 1. Validación (Idéntica al store) [cite: 200]
+        $validated = $request->validate([
+            'account_id'   => 'required|exists:accounts,id',
+            'category_id'  => 'nullable|exists:categories,id',
+            'type'         => 'required|in:ingreso,gasto',
+            'amount'       => 'required|numeric',
+            'description'  => 'required|string|max:255',
+            'date'         => 'required|date',
+            'time'         => 'nullable|date_format:H:i', // [cite: 207]
+        ]);
+
+        // 2. Lógica de monto negativo/positivo (Idéntica al store) [cite: 210]
+        $rawAmount = $request->input('amount');
+        if ($rawAmount < 0) {
+            $validated['amount'] = abs($rawAmount);
+            $validated['type']    = 'gasto';
+        } else {
+            $validated['amount'] = $rawAmount;
+            $validated['type']    = 'ingreso';
+        }
+
+        // 3. Detectar si la categoría cambió para "aprender"
+        // Guardamos el ID anterior antes de actualizar
+        $oldCategoryId = $transaction->category_id;
+        
+        // Si no seleccionó nada, intentamos sugerir de nuevo (opcional en edición, pero útil)
+        if (empty($validated['category_id'])) {
+            $engine = new \App\Services\CategoryAssignmentEngine();
+            $suggested = $engine->suggestCategory($validated['description'], $validated['type']);
+            $validated['category_id'] = $suggested?->id;
+        }
+
+        // 4. Actualizar registro
+        $transaction->update($validated);
+
+        // 5. Aprendizaje: Si el usuario cambió la categoría manualmente respecto a lo que había antes
+        //    o respecto a lo que se sugirió, reforzamos esa regla.
+        if ($request->filled('category_id') && $validated['category_id'] != $oldCategoryId) {
+            // Invocamos al motor para que aprenda de este cambio [cite: 228]
+            (new \App\Services\CategoryAssignmentEngine())->learnFromTransaction($transaction);
+        }
+
+        return redirect()
+            ->route('transactions.index') // Generalmente al editar volvemos al listado
+            ->with('success', '¡Transacción actualizada correctamente!');
+    }
+
+    /**
+     * Elimina una transacción de la base de datos.
+     */
+    public function destroy(Transaction $transaction): RedirectResponse
+    {
+        // Simplemente eliminamos el registro
+        $transaction->delete();
+
+        // Redirigimos al historial con un mensaje de éxito
+        return redirect()->route('transactions.index')
+                         ->with('success', '¡Transacción eliminada correctamente!');
+    }
 }

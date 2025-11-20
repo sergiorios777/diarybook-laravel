@@ -17,6 +17,12 @@
         .btn { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
         .monto-ingreso { color: #28a745; font-weight: bold; }
         .monto-gasto { color: #dc3545; font-weight: bold; }
+        .btn-edit {
+            font-size: 0.9em;
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -47,6 +53,7 @@
                     <th>Cuenta</th>
                     <th>Categoría</th>
                     <th>Monto</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,6 +73,21 @@
                             <td class="{{ $transaction->type == 'ingreso' ? 'monto-ingreso' : 'monto-gasto' }}">
                                 {{ $transaction->type == 'ingreso' ? '+' : '-' }}
                                 ${{ number_format($transaction->amount, 2) }}
+                            </td>
+                            <td>
+                                <a href="{{ route('transactions.edit', $transaction) }}" class="btn-edit" style="margin-right: 10px; text-decoration: none; color: #007bff;">
+                                    Editar
+                                </a>
+
+                                <form action="{{ route('transactions.destroy', $transaction) }}" method="POST" style="display: inline-block;">
+                                    @csrf
+                                    @method('DELETE') <button type="submit" 
+                                            class="btn-delete"
+                                            onclick="return confirm('¿Estás seguro de eliminar esta transacción? Esta acción afectará el saldo de la cuenta.')"
+                                            style="background: none; border: none; color: #dc3545; cursor: pointer; font-weight: bold; text-decoration: underline;">
+                                        Eliminar
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @endforeach
