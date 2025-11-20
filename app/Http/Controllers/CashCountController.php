@@ -16,4 +16,14 @@ class CashCountController extends Controller
         
         return view('cash_counts.index', compact('accounts'));
     }
+
+    /**
+     * Método API para obtener el saldo fresco de una cuenta sin recargar la página.
+     */
+    public function getBalance(Account $account)
+    {
+        return response()->json([
+            'balance' => $account->current_balance
+        ]);
+    }
 }

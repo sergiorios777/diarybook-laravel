@@ -26,3 +26,4 @@ Route::resource('transactions', TransactionController::class)->only([
 
 // --- RUTA DE ARQUEO DE CAJA (CONTADOR) ---
 Route::get('/arqueo', [CashCountController::class, 'index'])->name('cash_counts.index');
+Route::get('/cuentas/{account}/saldo', [CashCountController::class, 'getBalance'])->name('cuentas.balance');

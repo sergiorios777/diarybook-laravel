@@ -75,19 +75,32 @@
             
             <div class="summary-item comparator">
                 <label>Comparar con Saldo del Sistema</label>
-                <div style="margin-bottom: 10px;">
-                    <select x-model="selectedAccountId">
-                        <option value="">-- Seleccionar Cuenta para comparar --</option>
+                
+                <div style="margin-bottom: 10px; display: flex; justify-content: center; gap: 10px; align-items: center;">
+                    <select x-model="selectedAccountId" @change="fetchBalance()">
+                        <option value="">-- Seleccionar Cuenta --</option>
                         @foreach($accounts as $account)
-                            <option value="{{ $account->id }}" data-balance="{{ $account->current_balance }}">
-                                {{ $account->name }} (Sistema: S/ {{ number_format($account->current_balance, 2) }})
+                            <option value="{{ $account->id }}" data-initial-balance="{{ $account->current_balance }}">
+                                {{ $account->name }}
                             </option>
                         @endforeach
                     </select>
+
+                    <button 
+                        x-show="selectedAccountId" 
+                        @click="fetchBalance()" 
+                        title="Actualizar saldo del sistema"
+                        style="padding: 8px 12px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <span x-show="!isLoading">🔄</span>
+                        <span x-show="isLoading">...</span>
+                    </button>
                 </div>
                 
                 <div x-show="selectedAccountId">
                     <div style="font-size: 1.1em;">
+                        Saldo Sistema: <strong x-text="formatCurrency(systemBalance)"></strong>
+                    </div>
+                    <div style="margin-top: 5px;">
                         Diferencia: 
                         <span :class="differenceClass" x-text="formatCurrency(difference)"></span>
                     </div>
@@ -179,45 +192,29 @@
     <script>
         function cashCounter() {
             return {
-                // Datos iniciales (Configuración de Perú)
+                // Datos iniciales
                 coins: [
-                    { denom: 0.10, qty: '' },
-                    { denom: 0.20, qty: '' },
-                    { denom: 0.50, qty: '' },
-                    { denom: 1.00, qty: '' },
-                    { denom: 2.00, qty: '' },
-                    { denom: 5.00, qty: '' }
+                    { denom: 0.10, qty: '' }, { denom: 0.20, qty: '' }, { denom: 0.50, qty: '' },
+                    { denom: 1.00, qty: '' }, { denom: 2.00, qty: '' }, { denom: 5.00, qty: '' }
                 ],
                 bills: [
-                    { denom: 10.00, qty: '' },
-                    { denom: 20.00, qty: '' },
-                    { denom: 50.00, qty: '' },
-                    { denom: 100.00, qty: '' },
-                    { denom: 200.00, qty: '' }
+                    { denom: 10.00, qty: '' }, { denom: 20.00, qty: '' }, { denom: 50.00, qty: '' },
+                    { denom: 100.00, qty: '' }, { denom: 200.00, qty: '' }
                 ],
                 
                 selectedAccountId: '',
                 systemBalance: 0,
+                isLoading: false, // Estado de carga
 
-                // Propiedades Computadas (Getters)
-                get totalCoins() {
-                    return this.coins.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0);
-                },
-                get totalBills() {
-                    return this.bills.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0);
-                },
-                get grandTotal() {
-                    return this.totalCoins + this.totalBills;
-                },
+                // Getters (Sin cambios)
+                get totalCoins() { return this.coins.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0); },
+                get totalBills() { return this.bills.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0); },
+                get grandTotal() { return this.totalCoins + this.totalBills; },
                 
-                // Lógica de Comparación
-                get difference() {
-                    this.updateSystemBalance();
-                    return this.grandTotal - this.systemBalance;
-                },
+                get difference() { return this.grandTotal - this.systemBalance; },
                 get differenceClass() {
                     const diff = this.difference;
-                    if (Math.abs(diff) < 0.01) return 'diff-neutral'; // Cuadra
+                    if (Math.abs(diff) < 0.01) return 'diff-neutral';
                     return diff > 0 ? 'diff-positive' : 'diff-negative';
                 },
                 get differenceText() {
@@ -226,21 +223,40 @@
                     return diff > 0 ? 'Sobra dinero (Ingreso extra?)' : 'Falta dinero (Gasto no registrado?)';
                 },
 
-                // Helpers
-                updateSystemBalance() {
+                // --- NUEVA FUNCIÓN: Obtener saldo fresco del servidor ---
+                async fetchBalance() {
                     if (!this.selectedAccountId) {
                         this.systemBalance = 0;
                         return;
                     }
-                    // Buscamos el option seleccionado para leer su data-balance
-                    const select = document.querySelector(`select[x-model="selectedAccountId"]`);
-                    if(select) {
+
+                    this.isLoading = true;
+
+                    try {
+                        // 1. Intentamos leer el valor inicial del HTML primero (para respuesta inmediata)
+                        const select = document.querySelector(`select[x-model="selectedAccountId"]`);
                         const option = select.querySelector(`option[value="${this.selectedAccountId}"]`);
-                        if(option) {
-                            this.systemBalance = parseFloat(option.getAttribute('data-balance'));
+                        
+                        // 2. Llamada AJAX al servidor para obtener el dato REAL y ACTUALIZADO
+                        const response = await fetch(`/cuentas/${this.selectedAccountId}/saldo`);
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            // Actualizamos el saldo con el dato fresco de la base de datos
+                            this.systemBalance = parseFloat(data.balance);
+                        } else {
+                            console.error("Error al obtener saldo");
+                            // Fallback al dato estático si falla la red
+                            if(option) this.systemBalance = parseFloat(option.getAttribute('data-initial-balance'));
                         }
+
+                    } catch (error) {
+                        console.error(error);
+                    } finally {
+                        this.isLoading = false;
                     }
                 },
+
                 formatNumber(value) {
                     return value.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 },
@@ -251,6 +267,7 @@
                     this.coins.forEach(c => c.qty = '');
                     this.bills.forEach(b => b.qty = '');
                     this.selectedAccountId = '';
+                    this.systemBalance = 0;
                 }
             }
         }
