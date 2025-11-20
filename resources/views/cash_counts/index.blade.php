@@ -185,6 +185,10 @@
             <button @click="reset()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
                 Limpiar / Reiniciar
             </button>
+            
+            <button @click="printReceipt()" style="background-color: #343a40; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; gap: 5px;">
+                <span>🖨️</span> Imprimir Ticket (PDF)
+            </button>
         </div>
 
     </div>
@@ -192,7 +196,7 @@
     <script>
         function cashCounter() {
             return {
-                // Datos iniciales
+                // --- DATOS (Igual que antes) ---
                 coins: [
                     { denom: 0.10, qty: '' }, { denom: 0.20, qty: '' }, { denom: 0.50, qty: '' },
                     { denom: 1.00, qty: '' }, { denom: 2.00, qty: '' }, { denom: 5.00, qty: '' }
@@ -201,16 +205,14 @@
                     { denom: 10.00, qty: '' }, { denom: 20.00, qty: '' }, { denom: 50.00, qty: '' },
                     { denom: 100.00, qty: '' }, { denom: 200.00, qty: '' }
                 ],
-                
                 selectedAccountId: '',
                 systemBalance: 0,
-                isLoading: false, // Estado de carga
+                isLoading: false,
 
-                // Getters (Sin cambios)
+                // --- GETTERS (Igual que antes) ---
                 get totalCoins() { return this.coins.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0); },
                 get totalBills() { return this.bills.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0); },
                 get grandTotal() { return this.totalCoins + this.totalBills; },
-                
                 get difference() { return this.grandTotal - this.systemBalance; },
                 get differenceClass() {
                     const diff = this.difference;
@@ -219,55 +221,202 @@
                 },
                 get differenceText() {
                     const diff = this.difference;
-                    if (Math.abs(diff) < 0.01) return '¡La caja cuadra perfectamente!';
-                    return diff > 0 ? 'Sobra dinero (Ingreso extra?)' : 'Falta dinero (Gasto no registrado?)';
+                    if (Math.abs(diff) < 0.01) return '¡Cuadra perfecto!';
+                    return diff > 0 ? 'Sobra dinero' : 'Falta dinero';
                 },
 
-                // --- NUEVA FUNCIÓN: Obtener saldo fresco del servidor ---
+                // --- FUNCIONES (Fetch y Format igual que antes) ---
                 async fetchBalance() {
-                    if (!this.selectedAccountId) {
-                        this.systemBalance = 0;
-                        return;
-                    }
-
+                    if (!this.selectedAccountId) { this.systemBalance = 0; return; }
                     this.isLoading = true;
-
                     try {
-                        // 1. Intentamos leer el valor inicial del HTML primero (para respuesta inmediata)
                         const select = document.querySelector(`select[x-model="selectedAccountId"]`);
                         const option = select.querySelector(`option[value="${this.selectedAccountId}"]`);
-                        
-                        // 2. Llamada AJAX al servidor para obtener el dato REAL y ACTUALIZADO
                         const response = await fetch(`/cuentas/${this.selectedAccountId}/saldo`);
-                        
                         if (response.ok) {
                             const data = await response.json();
-                            // Actualizamos el saldo con el dato fresco de la base de datos
                             this.systemBalance = parseFloat(data.balance);
                         } else {
-                            console.error("Error al obtener saldo");
-                            // Fallback al dato estático si falla la red
                             if(option) this.systemBalance = parseFloat(option.getAttribute('data-initial-balance'));
                         }
-
-                    } catch (error) {
-                        console.error(error);
-                    } finally {
-                        this.isLoading = false;
-                    }
+                    } catch (error) { console.error(error); } finally { this.isLoading = false; }
                 },
-
-                formatNumber(value) {
-                    return value.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                },
-                formatCurrency(value) {
-                    return 'S/ ' + this.formatNumber(value);
-                },
+                formatNumber(value) { return value.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+                formatCurrency(value) { return 'S/ ' + this.formatNumber(value); },
                 reset() {
                     this.coins.forEach(c => c.qty = '');
                     this.bills.forEach(b => b.qty = '');
                     this.selectedAccountId = '';
                     this.systemBalance = 0;
+                },
+
+                // --- FUNCIÓN FINAL: IMPRIMIR TICKET CON SUBTOTALES ---
+                printReceipt() {
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('es-PE');
+                    const timeStr = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+                    let accountName = "Sin comparar";
+                    if (this.selectedAccountId) {
+                        const select = document.querySelector(`select[x-model="selectedAccountId"]`);
+                        const option = select.options[select.selectedIndex];
+                        accountName = option.text.split('(')[0].trim();
+                    }
+
+                    const activeCoins = this.coins.filter(c => c.qty > 0);
+                    const activeBills = this.bills.filter(b => b.qty > 0);
+
+                    let html = `
+                    <html>
+                    <head>
+                        <title>Arqueo de Caja</title>
+                        <style>
+                            @page { size: 80mm auto; margin: 0; }
+                            
+                            body { 
+                                margin: 5mm 15mm; 
+                                font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
+                                font-size: 15px; 
+                                font-weight: 700; 
+                                letter-spacing: -0.5px; 
+                                color: #000;
+                                text-transform: uppercase; 
+                            }
+
+                            .header { 
+                                text-align: center; 
+                                margin-bottom: 15px; 
+                                padding-bottom: 5px; 
+                                border-bottom: 2px dashed #000; 
+                            }
+                            
+                            h2 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 0px; }
+                            p { margin: 2px 0; }
+
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                margin-bottom: 2px; /* Reducido para pegar el subtotal */
+                                table-layout: fixed; 
+                            }
+                            
+                            th, td {
+                                font-size: 15px; 
+                                padding: 2px 0;
+                                vertical-align: bottom;
+                            }
+
+                            th { border-bottom: 1px solid #000; }
+
+                            /* Columnas: 40% - 20% - 40% */
+                            th:nth-child(1), td:nth-child(1) { width: 40%; text-align: left; }
+                            th:nth-child(2), td:nth-child(2) { width: 20%; text-align: center; }
+                            th:nth-child(3), td:nth-child(3) { width: 40%; text-align: right; }
+
+                            .section-title {
+                                margin-top: 10px;
+                                margin-bottom: 2px; 
+                                text-decoration: underline;
+                                font-size: 15px;
+                            }
+
+                            /* Estilo para el Subtotal de sección */
+                            .subtotal-line {
+                                text-align: right;
+                                font-size: 15px;
+                                font-style: italic;
+                                border-top: 1px dashed #000;
+                                padding-top: 2px;
+                                margin-bottom: 5px;
+                            }
+
+                            .total-line { 
+                                border-top: 2px solid #000; 
+                                font-size: 16px; 
+                                margin-top: 10px; 
+                                padding-top: 5px; 
+                                display: flex; 
+                                justify-content: space-between;
+                            }
+
+                            .diff-section { 
+                                margin-top: 15px; 
+                                border: 1px solid #000; 
+                                padding: 5px;
+                                text-align: center;
+                            }
+                            
+                            .footer { text-align: center; margin-top: 20px; font-size: 10px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h2>ARQUEO DE CAJA</h2>
+                            <p>${dateStr} ${timeStr}</p>
+                            <p style="font-size: 13px;">CUENTA: ${accountName}</p>
+                        </div>
+
+                        ${activeCoins.length > 0 ? `
+                            <div class="section-title">MONEDAS</div>
+                            <table>
+                                <thead><tr><th>DENOM.</th><th>CANT.</th><th>TOTAL</th></tr></thead>
+                                <tbody>
+                                    ${activeCoins.map(c => `
+                                        <tr>
+                                            <td>${c.denom.toFixed(2)}</td>
+                                            <td>${c.qty}</td>
+                                            <td>${(c.denom * c.qty).toFixed(2)}</td>
+                                        </tr>`).join('')}
+                                </tbody>
+                            </table>
+                            <div class="subtotal-line">
+                                SUB. MONEDAS: S/ ${this.formatNumber(this.totalCoins)}
+                            </div>
+                        ` : ''}
+
+                        ${activeBills.length > 0 ? `
+                            <div class="section-title">BILLETES</div>
+                            <table>
+                                <thead><tr><th>DENOM.</th><th>CANT.</th><th>TOTAL</th></tr></thead>
+                                <tbody>
+                                    ${activeBills.map(b => `
+                                        <tr>
+                                            <td>${b.denom.toFixed(2)}</td>
+                                            <td>${b.qty}</td>
+                                            <td>${(b.denom * b.qty).toFixed(2)}</td>
+                                        </tr>`).join('')}
+                                </tbody>
+                            </table>
+                            <div class="subtotal-line">
+                                SUB. BILLETES: S/ ${this.formatNumber(this.totalBills)}
+                            </div>
+                        ` : ''}
+
+                        <div class="total-line">
+                            <span>TOTAL EFECTIVO:</span>
+                            <span>S/ ${this.formatNumber(this.grandTotal)}</span>
+                        </div>
+
+                        <div class="diff-section">
+                            ${this.selectedAccountId ? `
+                                <p style="margin:0; font-size: 14px;">SISTEMA: S/ ${this.formatNumber(this.systemBalance)}</p>
+                                <div style="font-size: 16px; margin-top: 4px;">
+                                    DIF: S/ ${this.formatNumber(this.difference)}
+                                </div>
+                                <p style="margin:0; font-size: 12px;">(${this.differenceText.toUpperCase()})</p>
+                            ` : '<p style="margin:0;">SIN COMPARACIÓN</p>'}
+                        </div>
+
+                        <div class="footer">.</div>
+                    </body>
+                    </html>
+                    `;
+
+                    const printWindow = window.open('', '', 'height=600,width=400');
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    setTimeout(() => { printWindow.print(); }, 250);
                 }
             }
         }
