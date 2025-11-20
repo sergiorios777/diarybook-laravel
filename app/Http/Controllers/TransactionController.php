@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Transaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use App\Services\CategoryAssignmentEngine;
 
 class TransactionController extends Controller
 {
@@ -63,25 +64,44 @@ class TransactionController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // 1. Validación (¡Crucial!)
-        //    Nos aseguramos de que los datos recibidos son correctos.
-        $validatedData = $request->validate([
-            'account_id' => 'required|exists:accounts,id',
-            'category_id' => 'required|exists:categories,id',
-            'type' => 'required|in:ingreso,gasto',
-            'amount' => 'required|numeric|min:0.01',
-            'description' => 'required|string|max:255',
-            'date' => 'required|date',
+        $validated = $request->validate([
+            'account_id'   => 'required|exists:accounts,id',
+            'category_id'  => 'nullable|exists:categories,id',
+            'type'         => 'required|in:ingreso,gasto',
+            'amount'       => 'required|numeric', // ← Quitamos min:0.01 para permitir negativos
+            'description'  => 'required|string|max:255',
+            'date'         => 'required|date',
+            'time'         => 'nullable|date_format:H:i',
         ]);
 
-        // 2. Si la validación pasa, creamos la transacción
-        //    Usamos $validatedData para asegurarnos de que solo guardamos
-        //    lo que hemos validado.
-        Transaction::create($validatedData);
+        // Convertimos automáticamente montos negativos → gasto y monto positivo
+        $rawAmount = $request->input('amount');
 
-        // 3. Redirigimos al usuario de vuelta al formulario
-        //    con un mensaje de éxito.
-        return redirect()->route('transactions.create')
-                         ->with('success', '¡Transacción registrada con éxito!');
+        if ($rawAmount < 0) {
+            $validated['amount'] = abs($rawAmount); // Guardamos siempre positivo
+            $validated['type']    = 'gasto';
+        } else {
+            $validated['amount'] = $rawAmount;
+            $validated['type']    = 'ingreso';
+        }
+
+        // Auto-asignación de categoría si no viene
+        if (empty($validated['category_id'])) {
+            $engine = new \App\Services\CategoryAssignmentEngine();
+            $suggested = $engine->suggestCategory($validated['description'], $validated['type']);
+            $validated['category_id'] = $suggested?->id;
+        }
+
+        $transaction = Transaction::create($validated);
+
+        // Aprendizaje si el usuario corrigió la categoría
+        if ($request->filled('category_id') && $request->category_id != $transaction->category_id) {
+            $transaction->update(['category_id' => $request->category_id]);
+            (new \App\Services\CategoryAssignmentEngine())->learnFromTransaction($transaction);
+        }
+
+        return redirect()
+            ->route('transactions.create')
+            ->with('success', '¡Transacción registrada con éxito!');
     }
 }

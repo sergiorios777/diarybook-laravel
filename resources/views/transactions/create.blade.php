@@ -20,8 +20,18 @@
         button:hover { background-color: #0056b3; }
         .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center;}
         /* Estilo para feedback visual */
-        .auto-selected { border: 2px solid #28a745; background-color: #e8f5e9; }
+        .auto-selected {
+            border: 2px solid #28a745 !important;
+            background-color: #f8fff9 !important;
+        }
+        #auto-label {
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
+    
 </head>
 <body>
 
@@ -60,7 +70,9 @@
                 <div class="form-group">
                     <label for="amount">Monto:</label>
                     <input type="number" id="amount" name="amount" step="0.01" placeholder="0.00" required style="font-size: 1.2em; font-weight: bold;">
-                    <small style="color: #666; font-size: 0.8em;">Use negativo (-) para gastos</small>
+                    <small style="color: #666; font-size: 0.85em;">
+                        ✅ Puedes usar monto negativo para gastos
+                    </small>
                 </div>
                 <div class="form-group">
                     <label for="account_id">Cuenta:</label>
@@ -75,11 +87,12 @@
 
             <div class="form-row">
                 <div class="form-group" style="flex: 2;">
-                    <label for="category_id">Categoría (Auto-asignada):</label>
-                    <select id="category_id" name="category_id" required>
+                    <label for="category_id">Categoría <span id="auto-label" style="color:#28a745;font-weight:bold;"></span>:</label>
+                    <select id="category_id" name="category_id">
                         <option value="">-- Seleccione Categoría --</option>
                         @foreach($categories as $category)
-                            <option value="{{ $category->id }}" data-type="{{ $category->type }}">
+                            <option value="{{ $category->id }}" 
+                                    data-type="{{ $category->type }}">
                                 {{ $category->name }}
                             </option>
                         @endforeach
@@ -103,113 +116,102 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- CONFIGURACIÓN: MAPEO DE IDs ---
-            // IMPORTANTE: Cambia los números de la derecha por los IDs REALES de tus categorías en la base de datos.
-            const categoryMap = {
-                1: 1,  // Caso 1: Ventas IF (ID Real)
-                2: 2,  // Caso 2: Otros Ingresos IF (ID Real)
-                3: 3,  // Caso 3: Transferencia Ctas (ID Real)
-                4: 4,  // Caso 4: Compras IF (ID Real)
-                5: 5,  // Caso 5: Préstamo (Ingreso) (ID Real)
-                6: 6,  // Caso 6: Pago Préstamo (Gasto) (ID Real)
-                7: 7,  // Caso 7: Otros gastos IF (ID Real)
-                8: 8,  // Caso 8: Otros gastos (NO IF) (ID Real)
-                9: 9,  // Caso 9: Otros Ingresos Generales (ID Real)
-                10: 10 // Caso 10: Otros/Neutro (ID Real)
-            };
+    document.addEventListener('DOMContentLoaded', function () {
+        const descriptionInput = document.getElementById('description');
+        const categorySelect   = document.getElementById('category_id');
+        const typeSelect       = document.getElementById('type');
+        const amountInput      = document.getElementById('amount');
+        const autoLabel        = document.getElementById('auto-label');
 
-            const descInput = document.getElementById('description');
-            const amountInput = document.getElementById('amount');
-            const categorySelect = document.getElementById('category_id');
-            const typeSelect = document.getElementById('type');
+        // Reglas del motor inteligente
+        const rules = {!! json_encode(
+            \App\Models\CategorizationRule::all()->map(function($r) {
+                return [
+                    'keyword' => $r->keyword ? strtolower($r->keyword) : null,
+                    'regex'   => $r->regex,
+                    'cat_id'  => $r->category_id,
+                    'type'    => $r->type
+                ];
+            })->filter()->values()
+        ) !!};
 
-            function updateTypeFromCategory() {
-                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-                const type = selectedOption.getAttribute('data-type');
-                if (type) typeSelect.value = type;
+        // Función principal de sugerencia
+        function suggest() {
+            if (!descriptionInput.value.trim()) {
+                resetAuto();
+                return;
             }
 
-            function applyRules() {
-                const text = descInput.value.toLowerCase().trim();
-                const amountVal = parseFloat(amountInput.value); // Puede ser NaN si está vacío
+            const desc = descriptionInput.value.toLowerCase();
+            const rawAmount = parseFloat(amountInput.value) || 0;
+            const inferredType = rawAmount < 0 ? 'gasto' : 'ingreso';
 
-                // Si no hay texto, no hacemos nada
-                if (text.length < 2) return;
+            let matched = false;
 
-                let assignedCatId = null;
+            for (const rule of rules) {
+                if (rule.type !== inferredType && typeSelect.value !== '') continue;
 
-                // --- REGLAS (CASOS 1 - 10) ---
-                
-                // CASO 3: Contiene "T.CTAS" (Prioridad alta porque aplica a cualquier monto)
-                if (text.includes('t.ctas')) {
-                    assignedCatId = categoryMap[3];
-                }
-                else if (amountVal > 0) {
-                    // --- RAMA: MONTO POSITIVO (> 0) ---
+                const matchKeyword = rule.keyword && desc.includes(rule.keyword);
+                const matchRegex   = rule.regex && new RegExp(rule.regex, 'i').test(desc);
 
-                    // Caso 1: Empieza con "venta if"
-                    if (text.startsWith('venta if')) {
-                        assignedCatId = categoryMap[1];
+                if (matchKeyword || matchRegex) {
+                    const option = categorySelect.querySelector(`option[value="${rule.cat_id}"]`);
+                    if (option) {
+                        categorySelect.value = rule.cat_id;
+                        autoLabel.textContent = ' (auto)';
+                        categorySelect.classList.add('auto-selected');
+                        syncTypeFromCategory();  // ← Aquí sincroniza el tipo
+                        matched = true;
+                        break;
                     }
-                    // Caso 5: Contiene "ptmo" o "préstamo"
-                    else if (text.includes('ptmo') || text.includes('préstamo')) {
-                        assignedCatId = categoryMap[5];
-                    }
-                    // Caso 2: Contiene "if" (pero no es Venta IF, ya evaluado arriba)
-                    else if (text.includes('if')) {
-                        assignedCatId = categoryMap[2];
-                    }
-                    // Caso 9: Cualquier otro valor positivo
-                    else {
-                        assignedCatId = categoryMap[9];
-                    }
-                } 
-                else if (amountVal < 0) {
-                    // --- RAMA: MONTO NEGATIVO (< 0) ---
-
-                    // Caso 4: Contiene "compra" ... y luego ... "if"
-                    // Usamos Regex para asegurar el orden y que ambos existan
-                    if (/compra.*if/.test(text)) {
-                        assignedCatId = categoryMap[4];
-                    }
-                    // Caso 6: Contiene "ptmo" o "préstamo"
-                    else if (text.includes('ptmo') || text.includes('préstamo')) {
-                        assignedCatId = categoryMap[6];
-                    }
-                    // Caso 7: Contiene "if" (Excluye 4 y 6 ya evaluados arriba)
-                    else if (text.includes('if')) {
-                        assignedCatId = categoryMap[7];
-                    }
-                    // Caso 8: No contiene "if"
-                    else {
-                        assignedCatId = categoryMap[8];
-                    }
-                }
-                else {
-                     // --- RAMA: MONTO CERO O VACÍO ---
-                     // (Opcional: Si quieres que asigne algo cuando el monto es 0)
-                     if (text.includes('t.ctas')) assignedCatId = categoryMap[3]; // Reafirmamos caso 3
-                     // Caso 10: Default para <= 0 o indefinido si no es T.CTAS
-                     else assignedCatId = categoryMap[10]; 
-                }
-
-                // --- APLICAR CAMBIOS ---
-                if (assignedCatId) {
-                    categorySelect.value = assignedCatId;
-                    updateTypeFromCategory();
-                    
-                    // Feedback visual temporal
-                    categorySelect.classList.add('auto-selected');
-                    setTimeout(() => categorySelect.classList.remove('auto-selected'), 500);
                 }
             }
 
-            // Escuchamos cambios en Descripción Y Monto
-            descInput.addEventListener('input', applyRules);
-            amountInput.addEventListener('input', applyRules);
-            categorySelect.addEventListener('change', updateTypeFromCategory);
+            if (!matched) {
+                resetAuto();
+            }
+        }
+
+        // Nueva función: sincroniza Tipo según la categoría seleccionada
+        function syncTypeFromCategory() {
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            if (selectedOption && selectedOption.value !== '') {
+                const categoryType = selectedOption.getAttribute('data-type');
+                if (categoryType === 'ingreso' || categoryType === 'gasto') {
+                    typeSelect.value = categoryType;
+                }
+            }
+        }
+
+        function resetAuto() {
+            autoLabel.textContent = '';
+            categorySelect.classList.remove('auto-selected');
+        }
+
+        // Eventos
+        descriptionInput?.addEventListener('input', suggest);
+        amountInput?.addEventListener('input', suggest);
+        amountInput?.addEventListener('change', suggest);
+
+        // Cuando el usuario cambia manualmente la categoría → actualiza tipo
+        categorySelect?.addEventListener('change', function() {
+            syncTypeFromCategory();
+            if (categorySelect.value !== '') {
+                autoLabel.textContent = ' (seleccionada)';
+                categorySelect.classList.add('auto-selected');
+            } else {
+                resetAuto();
+            }
         });
+
+        // Si cambia manualmente el tipo, no lo sobreescribimos (respeta decisión del usuario)
+        typeSelect?.addEventListener('change', function() {
+            // No hacemos nada → el usuario manda
+        });
+
+        // Ejecutar al cargar por si hay datos precargados
+        suggest();
+    });
     </script>
 
 </body>
