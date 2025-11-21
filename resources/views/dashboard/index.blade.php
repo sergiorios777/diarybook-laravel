@@ -28,6 +28,7 @@
         <div>
             <a href="{{ route('reports.expenses') }}">Informe Gastos</a>
             <a href="{{ route('reports.income') }}">Informe Ingresos</a>
+            <a href="{{ route('cash_counts.index') }}">Arqueo</a>
             
             <a href="{{ route('transactions.index') }}">Historial</a>
             <a href="{{ route('categorias.index') }}">Categorías</a>
@@ -44,6 +45,10 @@
             <div class="amount">
                 ${{ number_format($total_general, 2) }}
             </div>
+
+            <button onclick="printDashboard()" style="margin-top: 15px; background-color: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 5px;">
+                <span>🖨️</span> Imprimir Reporte de Saldos
+            </button>
         </div>
 
         <h2>Saldos por Cuenta</h2>
@@ -61,6 +66,139 @@
 
         </div>
     </div>
+
+    <script>
+        function printDashboard() {
+            // 1. Pasamos los datos de PHP a JS
+            const totalGeneral = {{ $total_general }};
+            
+            // Mapeamos las cuentas para tener nombre y saldo en un array limpio
+            const accounts = [
+                @foreach($accounts as $account)
+                {
+                    name: "{{ $account->name }}",
+                    balance: {{ $account->current_balance }}
+                },
+                @endforeach
+            ];
+
+            // 2. Datos de fecha y hora
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-PE');
+            const timeStr = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+            // Helper para formato de moneda
+            const formatMoney = (amount) => {
+                return 'S/ ' + amount.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            };
+
+            // 3. Construcción del HTML (Estilo Ticket 80mm Grueso)
+            let html = `
+            <html>
+            <head>
+                <title>Reporte de Saldos</title>
+                <style>
+                    @page { size: 72mm auto; margin: 0; }
+                    
+                    body { 
+                        width: 71mm;
+                        margin: auto; 
+                        font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
+                        font-size: 15px; 
+                        font-weight: 700; 
+                        letter-spacing: -0.5px; 
+                        color: #000;
+                        text-transform: uppercase; 
+                    }
+
+                    .header { 
+                        text-align: center; 
+                        margin-bottom: 15px; 
+                        padding-bottom: 5px; 
+                        border-bottom: 2px dashed #000; 
+                    }
+                    
+                    h2 { margin: 0; font-size: 18px; font-weight: 900; letter-spacing: 0px; }
+                    p { margin: 2px 0; }
+
+                    table { 
+                        width: 100%; 
+                        border-collapse: collapse; 
+                        margin-bottom: 10px; 
+                        table-layout: fixed; /* Alineación perfecta */
+                    }
+                    
+                    th, td {
+                        font-size: 15px; 
+                        padding: 4px 0; /* Un poco más de aire entre cuentas */
+                        vertical-align: bottom;
+                        border-bottom: 1px dotted #ccc; /* Línea suave entre cuentas */
+                    }
+
+                    /* Columna 1: Nombre Cuenta (60%) - Izquierda */
+                    th:nth-child(1), td:nth-child(1) { width: 60%; text-align: left; }
+
+                    /* Columna 2: Saldo (40%) - Derecha */
+                    th:nth-child(2), td:nth-child(2) { width: 40%; text-align: right; }
+
+                    .total-line { 
+                        border-top: 2px solid #000; 
+                        font-size: 17px; 
+                        margin-top: 10px; 
+                        padding-top: 5px; 
+                        display: flex; 
+                        justify-content: space-between;
+                    }
+
+                    .footer { text-align: center; margin-top: 20px; font-size: 10px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>ESTADO DE CUENTAS</h2>
+                    <p>${dateStr} ${timeStr}</p>
+                    <p style="font-size: 12px;">RESUMEN GENERAL</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr style="border-bottom: 1px solid #000;">
+                            <th>CUENTA</th>
+                            <th>SALDO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${accounts.map(acc => `
+                            <tr>
+                                <td>${acc.name}</td>
+                                <td>${formatMoney(acc.balance)}</td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>
+
+                <div class="total-line">
+                    <span>TOTAL:</span>
+                    <span>${formatMoney(totalGeneral)}</span>
+                </div>
+
+                <div class="footer">
+                    <p>--- Fin del Reporte ---</p>
+                </div>
+            </body>
+            </html>
+            `;
+
+            // 4. Imprimir
+            const printWindow = window.open('', '', 'height=600,width=400');
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
+        }
+    </script>
 
 </body>
 </html>

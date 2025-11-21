@@ -271,10 +271,11 @@
                     <head>
                         <title>Arqueo de Caja</title>
                         <style>
-                            @page { size: 80mm auto; margin: 0; }
+                            @page { size: 72mm auto; margin: 0; }
                             
                             body { 
-                                margin: 5mm 15mm; 
+                                width: 71mm;
+                                margin: auto; 
                                 font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
                                 font-size: 15px; 
                                 font-weight: 700; 
