@@ -1,15 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Mi Tienda</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7f6; }
-        .navbar { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .navbar a { text-decoration: none; color: #333; font-weight: bold; margin: 0 10px; }
-        .navbar a.btn { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 4px; }
-        .container { max-width: 1000px; margin: 20px auto; padding: 20px; }
+@extends('layouts.app') @section('title', 'Dashboard') @push('styles') <style>
+        /* Estilos que SOLO afectan al dashboard */
+        .container { max-width: 100%; } /* Ahora ocupamos el ancho disponible */
         .card-total { background-color: #333; color: white; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 25px; }
         .card-total h2 { margin: 0 0 10px 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
         .card-total .amount { font-size: 2.5rem; font-weight: bold; }
@@ -20,44 +11,23 @@
         .account-card .balance.positive { color: #28a745; }
         .account-card .balance.negative { color: #dc3545; }
     </style>
-</head>
-<body>
+@endpush
 
-    <nav class="navbar">
-        <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
-        <div>
-            <a href="{{ route('reports.expenses') }}">Gastos</a>
-            <a href="{{ route('reports.income') }}">Ingresos</a>
-            <a href="{{ route('reports.weekly') }}">Semanal</a>
-            <a href="{{ route('reports.monthly') }}">Mensual</a>
-            <a href="{{ route('reports.detailed') }}">Detallado</a>
-            <a href="{{ route('cash_counts.index') }}">Arqueo</a>
-            
-            <a href="{{ route('transactions.index') }}">Transacciones</a>
-            <a href="{{ route('categorias.index') }}">Categorías</a>
-            <a href="{{ route('cuentas.index') }}">Cuentas</a>
-            <a href="{{ route('transactions.create') }}" class="btn">+ Nueva Transacción</a>
-        </div>
-    </nav>
-
-    <div class="container">
+@section('content') <div class="container">
 
         <div class="card-total">
-            
             <h2>Saldo Total (Todas las Cuentas)</h2>
             <div class="amount">
                 ${{ number_format($total_general, 2) }}
             </div>
-
-            <button onclick="printDashboard()" style="margin-top: 15px; background-color: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 5px;">
-                <span>🖨️</span> Imprimir Reporte de Saldos
+            <button onclick="printDashboard()" style="margin-top: 15px; background-color: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                🖨️ Imprimir Reporte
             </button>
         </div>
 
         <h2>Saldos por Cuenta</h2>
         
         <div class="account-list">
-            
             @foreach($accounts as $account)
                 <div class="account-card">
                     <h3>{{ $account->name }}</h3>
@@ -66,10 +36,8 @@
                     </div>
                 </div>
             @endforeach
-
         </div>
     </div>
-
     <script>
         function printDashboard() {
             // 1. Pasamos los datos de PHP a JS
@@ -203,5 +171,4 @@
         }
     </script>
 
-</body>
-</html>
+@endsection

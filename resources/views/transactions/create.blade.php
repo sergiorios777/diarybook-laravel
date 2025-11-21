@@ -1,50 +1,91 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Transacción</title>
+@extends('layouts.app')
+
+@section('title', 'Registrar Transacción')
+
+@push('styles')
     <style>
-        /* Estilos base (Mismos de versiones anteriores) */
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7f6; }
-        .navbar { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .navbar a { text-decoration: none; color: #333; font-weight: bold; margin: 0 10px; }
-        .form-container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; margin-top: 0; }
-        .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        /* --- ESTILOS DEL FORMULARIO --- */
+        .form-container { 
+            max-width: 700px; /* Un poco más ancho para que respire mejor */
+            margin: 0 auto; 
+            padding: 30px; 
+            background-color: #fff; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        }
+        
+        h1 { text-align: center; color: #343a40; margin-top: 0; margin-bottom: 25px; font-size: 1.5rem; }
+        
+        .form-row { display: flex; gap: 20px; margin-bottom: 15px; }
         .form-group { margin-bottom: 15px; flex: 1; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
-        input:focus, select:focus { border-color: #007bff; outline: none; }
-        button { width: 100%; background-color: #007bff; color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; }
-        button:hover { background-color: #0056b3; }
-        .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center;}
-        /* Estilo para feedback visual */
+        
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 0.9rem; }
+        
+        input, select { 
+            width: 100%; 
+            padding: 10px 12px; 
+            box-sizing: border-box; 
+            border: 1px solid #ced4da; 
+            border-radius: 4px; 
+            font-size: 1rem; 
+            transition: border-color 0.15s ease-in-out;
+        }
+        
+        input:focus, select:focus { 
+            border-color: #007bff; 
+            outline: none; 
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        
+        /* Botón Principal */
+        button[type="submit"] { 
+            width: 100%; 
+            background-color: #007bff; 
+            color: white; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600; 
+            transition: background 0.3s; 
+            margin-top: 10px;
+        }
+        button[type="submit"]:hover { background-color: #0056b3; }
+        
+        /* Alertas */
+        .alert-success { 
+            background-color: #d4edda; 
+            color: #155724; 
+            padding: 15px; 
+            border-radius: 4px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+            border: 1px solid #c3e6cb;
+        }
+
+        /* Estilo para feedback visual (Auto-asignación) */
         .auto-selected {
             border: 2px solid #28a745 !important;
             background-color: #f8fff9 !important;
         }
         #auto-label {
-            font-size: 0.9em;
+            font-size: 0.85em;
             transition: all 0.3s;
+            margin-left: 5px;
         }
     </style>
+@endpush
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
-    
-</head>
-<body>
-
-    <nav class="navbar">
-        <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
-        <div><a href="{{ route('transactions.index') }}">Volver al Historial</a></div>
-    </nav>
+@section('content')
 
     <div class="form-container">
         <h1>Registrar Movimiento</h1>
 
         @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
         @endif
 
         <form action="{{ route('transactions.store') }}" method="POST">
@@ -63,15 +104,15 @@
 
             <div class="form-group">
                 <label for="description">Descripción:</label>
-                <input type="text" id="description" name="description" placeholder="Escribe aquí..." required autofocus autocomplete="off">
+                <input type="text" id="description" name="description" placeholder="Ej: Pago de servicios, Venta del día..." required autofocus autocomplete="off">
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label for="amount">Monto:</label>
                     <input type="number" id="amount" name="amount" step="0.01" placeholder="0.00" required style="font-size: 1.2em; font-weight: bold;">
-                    <small style="color: #666; font-size: 0.85em;">
-                        ✅ Puedes usar monto negativo para gastos
+                    <small style="color: #6c757d; font-size: 0.85em; margin-top: 5px; display: block;">
+                        ✅ Usa negativo (-) para gastos
                     </small>
                 </div>
                 <div class="form-group">
@@ -91,8 +132,7 @@
                     <select id="category_id" name="category_id">
                         <option value="">-- Seleccione Categoría --</option>
                         @foreach($categories as $category)
-                            <option value="{{ $category->id }}" 
-                                    data-type="{{ $category->type }}">
+                            <option value="{{ $category->id }}" data-type="{{ $category->type }}">
                                 {{ $category->name }}
                             </option>
                         @endforeach
@@ -109,12 +149,15 @@
                 </div>
             </div>
 
-            <div class="form-group" style="margin-top: 20px;">
+            <div class="form-group">
                 <button type="submit">Guardar Transacción</button>
             </div>
         </form>
     </div>
 
+@endsection
+
+@push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const descriptionInput = document.getElementById('description');
@@ -123,7 +166,7 @@
         const amountInput      = document.getElementById('amount');
         const autoLabel        = document.getElementById('auto-label');
 
-        // Reglas del motor inteligente
+        // Reglas del motor inteligente (Inyectadas desde PHP)
         const rules = {!! json_encode(
             \App\Models\CategorizationRule::all()->map(function($r) {
                 return [
@@ -160,7 +203,7 @@
                         categorySelect.value = rule.cat_id;
                         autoLabel.textContent = ' (auto)';
                         categorySelect.classList.add('auto-selected');
-                        syncTypeFromCategory();  // ← Aquí sincroniza el tipo
+                        syncTypeFromCategory();  // ← Sincroniza el tipo
                         matched = true;
                         break;
                     }
@@ -172,7 +215,7 @@
             }
         }
 
-        // Nueva función: sincroniza Tipo según la categoría seleccionada
+        // Sincroniza Tipo según la categoría seleccionada
         function syncTypeFromCategory() {
             const selectedOption = categorySelect.options[categorySelect.selectedIndex];
             if (selectedOption && selectedOption.value !== '') {
@@ -193,7 +236,7 @@
         amountInput?.addEventListener('input', suggest);
         amountInput?.addEventListener('change', suggest);
 
-        // Cuando el usuario cambia manualmente la categoría → actualiza tipo
+        // Cambio manual de categoría
         categorySelect?.addEventListener('change', function() {
             syncTypeFromCategory();
             if (categorySelect.value !== '') {
@@ -204,15 +247,8 @@
             }
         });
 
-        // Si cambia manualmente el tipo, no lo sobreescribimos (respeta decisión del usuario)
-        typeSelect?.addEventListener('change', function() {
-            // No hacemos nada → el usuario manda
-        });
-
-        // Ejecutar al cargar por si hay datos precargados
+        // Ejecutar al cargar
         suggest();
     });
     </script>
-
-</body>
-</html>
+@endpush

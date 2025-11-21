@@ -1,71 +1,106 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Contador de Efectivo (Arqueo)</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
+@extends('layouts.app')
+
+@section('title', 'Arqueo de Caja')
+
+@push('styles')
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f2f5; color: #333; }
+        /* --- ESTILOS ESPECÍFICOS DEL ARQUEO --- */
         
-        /* Navbar */
-        .navbar { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .navbar a { text-decoration: none; color: #333; font-weight: bold; margin: 0 10px; }
-        .navbar a.btn { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 4px; }
+        .container-fluid {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
 
-        /* Contenedor Principal */
-        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        h1 { text-align: center; color: #343a40; margin-bottom: 30px; font-size: 1.8rem; }
 
-        /* Grid de Tablas */
-        .grid-money { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        @media (max-width: 768px) { .grid-money { grid-template-columns: 1fr; } }
-
-        /* Tarjetas */
-        .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
-        .card-header { background: #f8f9fa; padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
-        .card-body { padding: 0; }
-
-        /* Tablas */
-        table { width: 100%; border-collapse: collapse; }
-        th { background-color: #f1f3f5; font-size: 0.85rem; color: #666; text-align: center; padding: 10px; }
-        td { padding: 8px 15px; border-bottom: 1px solid #f1f1f1; vertical-align: middle; }
-        
-        /* Inputs */
-        input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 1rem; transition: border 0.3s; }
-        input[type="number"]:focus { border-color: #007bff; outline: none; background-color: #fbfdff; }
-        
-        /* Totales */
-        .subtotal-display { font-family: monospace; font-size: 1.1rem; text-align: right; font-weight: bold; color: #444; }
-        .section-total { padding: 15px; background-color: #f8fff9; text-align: right; font-weight: bold; font-size: 1.2rem; color: #28a745; border-top: 2px solid #e9ecef; }
-
-        /* Resumen Final */
-        .summary-panel { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .summary-item { flex: 1; min-width: 200px; text-align: center; }
-        .summary-item label { display: block; font-size: 0.9rem; color: #666; margin-bottom: 5px; text-transform: uppercase; }
-        .summary-value { font-size: 2rem; font-weight: bold; color: #2c3e50; }
+        /* Panel Superior (Resumen) */
+        .summary-panel { 
+            background: #fff; 
+            padding: 25px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 20px; 
+            margin-bottom: 30px;
+        }
+        .summary-item { flex: 1; min-width: 250px; text-align: center; }
+        .summary-item label { display: block; font-size: 0.9rem; color: #6c757d; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .summary-value { font-size: 2.2rem; font-weight: 700; color: #343a40; }
         
         /* Comparador */
-        .comparator { border-top: 1px solid #eee; margin-top: 20px; padding-top: 20px; width: 100%; }
-        .diff-positive { color: #28a745; } /* Sobra dinero */
-        .diff-negative { color: #dc3545; } /* Falta dinero */
-        .diff-neutral { color: #888; }     /* Cuadra perfecto */
+        .comparator { 
+            border-left: 1px solid #eee; 
+            padding-left: 20px; 
+        }
+        @media (max-width: 768px) { .comparator { border-left: none; border-top: 1px solid #eee; padding-left: 0; padding-top: 20px; } }
 
-        select { padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; width: 100%; max-width: 300px; }
-    </style>
-</head>
-<body>
+        .diff-positive { color: #28a745; font-weight: bold; } 
+        .diff-negative { color: #dc3545; font-weight: bold; } 
+        .diff-neutral { color: #6c757d; font-weight: bold; }
 
-    <nav class="navbar">
-        <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
-        <div>
-            <a href="{{ route('transactions.index') }}">Volver</a>
-        </div>
-    </nav>
+        /* Grid de Tablas */
+        .grid-money { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
+        @media (max-width: 768px) { .grid-money { grid-template-columns: 1fr; } }
 
-    <div class="container" x-data="cashCounter()">
+        /* Tarjetas de Conteo */
+        .card-count { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e9ecef; }
+        .card-header { 
+            background: #f8f9fa; 
+            padding: 12px; 
+            border-bottom: 1px solid #e9ecef; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            text-align: center; 
+            color: #495057;
+        }
+        .card-body { padding: 0; }
+
+        /* Tablas Internas */
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: #fff; font-size: 0.8rem; color: #adb5bd; text-align: center; padding: 10px; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid #f1f1f1; }
+        td { padding: 8px 15px; border-bottom: 1px solid #f8f9fa; vertical-align: middle; }
         
-        <h1>💰 Arqueo de Caja (Contador)</h1>
+        /* Inputs de cantidad */
+        input[type="number"] { 
+            width: 100%; 
+            padding: 8px; 
+            border: 1px solid #ced4da; 
+            border-radius: 4px; 
+            text-align: center; 
+            font-size: 1.1rem; 
+            color: #495057;
+            transition: border-color 0.2s; 
+        }
+        input[type="number"]:focus { border-color: #007bff; outline: none; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.15); }
+        
+        .subtotal-display { font-family: 'Consolas', monospace; font-size: 1.1rem; text-align: right; font-weight: 600; color: #495057; }
+        .section-total { padding: 15px; background-color: #f8fff9; text-align: right; font-weight: 700; font-size: 1.2rem; color: #28a745; border-top: 1px solid #e9ecef; }
+
+        /* Selectores y Botones */
+        select { padding: 8px; border-radius: 4px; border: 1px solid #ced4da; font-size: 0.95rem; width: 100%; max-width: 300px; }
+        
+        .btn-refresh {
+            padding: 8px 12px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-refresh:hover { background-color: #138496; }
+
+        .btn-action-group { text-align: center; margin-bottom: 40px; display: flex; gap: 10px; justify-content: center; }
+        .btn-reset { background-color: #6c757d; color: white; }
+        .btn-reset:hover { background-color: #5a6268; }
+        .btn-print { background-color: #343a40; color: white; display: flex; align-items: center; gap: 8px; }
+        .btn-print:hover { background-color: #23272b; }
+    </style>
+@endpush
+
+@section('content')
+
+    <div class="container-fluid" x-data="cashCounter()">
+        
+        <h1>💰 Arqueo de Caja</h1>
 
         <div class="summary-panel">
             <div class="summary-item">
@@ -74,9 +109,9 @@
             </div>
             
             <div class="summary-item comparator">
-                <label>Comparar con Saldo del Sistema</label>
+                <label>Comparar con Sistema</label>
                 
-                <div style="margin-bottom: 10px; display: flex; justify-content: center; gap: 10px; align-items: center;">
+                <div style="margin-bottom: 15px; display: flex; justify-content: center; gap: 10px; align-items: center;">
                     <select x-model="selectedAccountId" @change="fetchBalance()">
                         <option value="">-- Seleccionar Cuenta --</option>
                         @foreach($accounts as $account)
@@ -89,31 +124,31 @@
                     <button 
                         x-show="selectedAccountId" 
                         @click="fetchBalance()" 
-                        title="Actualizar saldo del sistema"
-                        style="padding: 8px 12px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        class="btn-refresh"
+                        title="Actualizar saldo">
                         <span x-show="!isLoading">🔄</span>
                         <span x-show="isLoading">...</span>
                     </button>
                 </div>
                 
-                <div x-show="selectedAccountId">
-                    <div style="font-size: 1.1em;">
+                <div x-show="selectedAccountId" style="background: #f8f9fa; padding: 10px; border-radius: 6px; display: inline-block;">
+                    <div style="font-size: 1rem; margin-bottom: 5px;">
                         Saldo Sistema: <strong x-text="formatCurrency(systemBalance)"></strong>
                     </div>
-                    <div style="margin-top: 5px;">
+                    <div style="font-size: 1.1rem;">
                         Diferencia: 
                         <span :class="differenceClass" x-text="formatCurrency(difference)"></span>
                     </div>
-                    <small x-text="differenceText" style="color: #666;"></small>
+                    <div style="margin-top: 5px;">
+                        <small x-text="differenceText" style="color: #6c757d; font-style: italic;"></small>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <br>
-
         <div class="grid-money">
             
-            <div class="card">
+            <div class="card-count">
                 <div class="card-header">Monedas</div>
                 <div class="card-body">
                     <table>
@@ -127,7 +162,7 @@
                         <tbody>
                             <template x-for="(coin, index) in coins" :key="index">
                                 <tr>
-                                    <td style="text-align: center; font-weight: bold;">
+                                    <td style="text-align: center; font-weight: 600; color: #495057;">
                                         S/ <span x-text="coin.denom.toFixed(2)"></span>
                                     </td>
                                     <td>
@@ -146,7 +181,7 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card-count">
                 <div class="card-header">Billetes</div>
                 <div class="card-body">
                     <table>
@@ -160,7 +195,7 @@
                         <tbody>
                             <template x-for="(bill, index) in bills" :key="index">
                                 <tr>
-                                    <td style="text-align: center; font-weight: bold;">
+                                    <td style="text-align: center; font-weight: 600; color: #495057;">
                                         S/ <span x-text="bill.denom.toFixed(2)"></span>
                                     </td>
                                     <td>
@@ -181,22 +216,25 @@
 
         </div>
 
-        <div style="text-align: center; margin-bottom: 40px;">
-            <button @click="reset()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
-                Limpiar / Reiniciar
+        <div class="btn-action-group">
+            <button @click="reset()" class="btn btn-reset">
+                Limpiar Todo
             </button>
             
-            <button @click="printReceipt()" style="background-color: #343a40; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; gap: 5px;">
-                <span>🖨️</span> Imprimir Ticket (PDF)
+            <button @click="printReceipt()" class="btn btn-print">
+                <span>🖨️</span> Imprimir Ticket
             </button>
         </div>
 
     </div>
 
+@endsection
+
+@push('scripts')
     <script>
         function cashCounter() {
             return {
-                // --- DATOS (Igual que antes) ---
+                // --- DATOS ---
                 coins: [
                     { denom: 0.10, qty: '' }, { denom: 0.20, qty: '' }, { denom: 0.50, qty: '' },
                     { denom: 1.00, qty: '' }, { denom: 2.00, qty: '' }, { denom: 5.00, qty: '' }
@@ -209,10 +247,11 @@
                 systemBalance: 0,
                 isLoading: false,
 
-                // --- GETTERS (Igual que antes) ---
+                // --- GETTERS ---
                 get totalCoins() { return this.coins.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0); },
                 get totalBills() { return this.bills.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0); },
                 get grandTotal() { return this.totalCoins + this.totalBills; },
+                
                 get difference() { return this.grandTotal - this.systemBalance; },
                 get differenceClass() {
                     const diff = this.difference;
@@ -225,7 +264,7 @@
                     return diff > 0 ? 'Sobra dinero' : 'Falta dinero';
                 },
 
-                // --- FUNCIONES (Fetch y Format igual que antes) ---
+                // --- FUNCIONES ---
                 async fetchBalance() {
                     if (!this.selectedAccountId) { this.systemBalance = 0; return; }
                     this.isLoading = true;
@@ -422,6 +461,4 @@
             }
         }
     </script>
-
-</body>
-</html>
+@endpush
