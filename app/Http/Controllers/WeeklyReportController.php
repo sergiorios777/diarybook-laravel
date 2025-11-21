@@ -17,7 +17,7 @@ class WeeklyReportController extends Controller
         $dateInput = $request->input('date', now()->toDateString());
         $date = Carbon::parse($dateInput);
 
-        // 2. Calcular inicio y fin de la semana (Lunes a Domingo)
+        // 2. Calcular inicio y fin de la semana (Domingo a Sábado)
         // Ajusta startOfWeek según tu preferencia (Carbon::MONDAY o Carbon::SUNDAY)
         $startOfWeek = $date->copy()->startOfWeek(Carbon::SUNDAY);
         $endOfWeek   = $date->copy()->endOfWeek(Carbon::SATURDAY);

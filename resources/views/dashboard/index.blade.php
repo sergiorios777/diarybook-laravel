@@ -29,6 +29,7 @@
             <a href="{{ route('reports.expenses') }}">Informe Gastos</a>
             <a href="{{ route('reports.income') }}">Informe Ingresos</a>
             <a href="{{ route('reports.weekly') }}">Informe Semanal</a>
+            <a href="{{ route('reports.monthly') }}">Mensual</a>
             <a href="{{ route('cash_counts.index') }}">Arqueo</a>
             
             <a href="{{ route('transactions.index') }}">Historial</a>

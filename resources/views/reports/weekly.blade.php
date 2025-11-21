@@ -53,6 +53,7 @@
         <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
         <div>
             <a href="{{ route('reports.weekly') }}">Reporte Semanal</a>
+            <a href="{{ route('reports.monthly') }}">Mensual</a>
             <a href="{{ route('transactions.index') }}">Volver</a>
         </div>
     </nav>
