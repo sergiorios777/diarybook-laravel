@@ -25,9 +25,12 @@ class TransactionController extends Controller
         //    Esto es "Eager Loading" (Carga Anticipada).
         //    Carga la cuenta y la categoría de cada transacción en la misma
         //    consulta, evitando el "problema N+1" y haciendo la app muy rápida.
+        // 1. Primero por Fecha descendente (lo más reciente arriba)
+        // 2. Luego por Hora descendente (para movimientos del mismo día)
         $transactions = Transaction::with(['account', 'category'])
-                                 ->latest() // Ordena por created_at descendente
-                                 ->get();
+                                 ->orderBy('date', 'desc')
+                                 ->orderBy('time', 'desc')
+                                 ->paginate(15);
 
         // 4. Retornamos la nueva vista (que crearemos a continuación)
         //    y le pasamos la variable $transactions.
