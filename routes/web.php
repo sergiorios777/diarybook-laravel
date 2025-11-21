@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\WeeklyReportController;
 
 // --- RUTA DEL DASHBOARD ---
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -16,6 +17,8 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/informes/gastos', [ReportController::class, 'expenses'])->name('reports.expenses');
 // Creamos la nueva ruta de ingresos
 Route::get('/informes/ingresos', [ReportController::class, 'income'])->name('reports.income');
+// Ruta para el informe semanal
+Route::get('/informes/semanal', [WeeklyReportController::class, 'index'])->name('reports.weekly');
 
 // --- RUTAS DE GESTIÓN (CRUD) ---
 Route::resource('categorias', CategoryController::class)->parameters(['categorias' => 'category']);
