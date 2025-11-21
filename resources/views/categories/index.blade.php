@@ -45,7 +45,7 @@
             <a href="{{ route('reports.expenses') }}">Informe Gastos</a>
             <a href="{{ route('reports.income') }}">Informe Ingresos</a>
             
-            <a href="{{ route('transactions.index') }}">Historial</a>
+            <a href="{{ route('transactions.index') }}">Transacciones</a>
             <a href="{{ route('categorias.index') }}">Categorías</a>
             <a href="{{ route('cuentas.index') }}">Cuentas</a>
             <a href="{{ route('transactions.create') }}" class="btn">+ Nueva Transacción</a>
