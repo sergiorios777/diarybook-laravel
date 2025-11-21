@@ -26,6 +26,40 @@
         th, td { padding: 12px 15px; border-bottom: 1px solid #ddd; text-align: left; }
         th { background-color: #f9f9f9; }
         td:last-child { font-weight: bold; text-align: right; }
+
+        /* ESTILOS DE IMPRESIÓN A4 VERTICAL */
+        @media print {
+            @page { size: A4 portrait; margin: 1.5cm; }
+            body { background: white; -webkit-print-color-adjust: exact; font-size: 12pt; }
+            
+            /* Ocultar elementos de navegación y formulario */
+            .navbar, .filter-form, .no-print { display: none !important; }
+            
+            /* Ajustar contenedor al ancho del papel */
+            .container { max-width: 100%; margin: 0; padding: 0; box-shadow: none; }
+            
+            /* Mejorar tabla para papel */
+            .report-table { box-shadow: none; border: 1px solid #ccc; }
+            th { background-color: #eee !important; color: black !important; border: 1px solid #aaa; }
+            td { border: 1px solid #aaa; }
+            
+            /* Tarjeta de Total simplificada para impresión */
+            .card-total { 
+                border: 1px solid #000; 
+                background-color: white !important; 
+                color: black !important; 
+                box-shadow: none;
+            }
+            
+            /* Mostrar el encabezado de impresión */
+            .print-only-header { display: block !important; }
+        }
+
+        /* Ocultar encabezado de impresión en pantalla */
+        .print-only-header { display: none; text-align: center; margin-bottom: 20px; }
+        .print-only-header h2 { margin: 0; text-transform: uppercase; }
+        .print-only-header p { margin: 5px 0; font-size: 14px; color: #555; }
+
     </style>
 </head>
 <body>
@@ -44,19 +78,30 @@
     </nav>
 
     <div class="container">
+        <div class="print-only-header">
+            <h2>Reporte de Gastos</h2>
+            <p>Del {{ \Carbon\Carbon::parse($date_from)->format('d/m/Y') }} al {{ \Carbon\Carbon::parse($date_to)->format('d/m/Y') }}</p>
+        </div>
+
         <h1>Informe de Gastos por Categoría</h1>
 
-        <form method="GET" action="{{ route('reports.expenses') }}" class="filter-form">
-            <div>
-                <label for="date_from">Desde:</label>
-                <input type="date" id="date_from" name="date_from" value="{{ $date_from }}">
-            </div>
-            <div>
-                <label for="date_to">Hasta:</label>
-                <input type="date" id="date_to" name="date_to" value="{{ $date_to }}">
-            </div>
-            <button type="submit">Filtrar</button>
-        </form>
+        <div class="filter-form" style="align-items: flex-end;">
+            <form method="GET" action="{{ route('reports.expenses') }}" style="display: flex; gap: 15px; flex: 1;">
+                <div style="flex: 1;">
+                    <label for="date_from">Desde:</label>
+                    <input type="date" id="date_from" name="date_from" value="{{ $date_from }}">
+                </div>
+                <div style="flex: 1;">
+                    <label for="date_to">Hasta:</label>
+                    <input type="date" id="date_to" name="date_to" value="{{ $date_to }}">
+                </div>
+                <button type="submit" style="height: 38px;">Filtrar</button>
+                
+                <button type="button" onclick="window.print()" class="no-print" style="background-color: #343a40; height: 38px;">
+                    🖨️ Imprimir A4
+                </button>
+            </form>
+        </div>
 
         <div class="card-total">
             <h2>Total de Gastos en este período</h2>
