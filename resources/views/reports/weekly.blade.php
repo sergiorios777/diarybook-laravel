@@ -52,7 +52,8 @@
     <nav class="navbar">
         <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
         <div>
-            <a href="{{ route('reports.weekly') }}">Reporte Semanal</a>
+            <a href="{{ route('reports.detailed') }}">Detallado</a>
+            <a href="{{ route('reports.weekly') }}">Semanal</a>
             <a href="{{ route('reports.monthly') }}">Mensual</a>
             <a href="{{ route('transactions.index') }}">Volver</a>
         </div>

@@ -78,39 +78,34 @@ class ReportController extends Controller
      */
     public function detailed(Request $request): View
     {
-        // 1. Obtener datos para los selectores del filtro
         $accounts = \App\Models\Account::all();
         $categories = \App\Models\Category::orderBy('name')->get();
 
-        // 2. Valores por defecto para los filtros
         $dateFrom = $request->input('date_from', now()->startOfMonth()->toDateString());
         $dateTo = $request->input('date_to', now()->endOfMonth()->toDateString());
         $accountId = $request->input('account_id');
         $categoryId = $request->input('category_id');
 
-        // 3. Construcción de la consulta
+        // 1. Preparamos la consulta base
         $query = Transaction::with(['account', 'category'])
             ->whereBetween('date', [$dateFrom, $dateTo]);
 
-        // Filtro opcional por Cuenta
-        if ($accountId) {
-            $query->where('account_id', $accountId);
-        }
+        if ($accountId) $query->where('account_id', $accountId);
+        if ($categoryId) $query->where('category_id', $categoryId);
 
-        // Filtro opcional por Categoría
-        if ($categoryId) {
-            $query->where('category_id', $categoryId);
-        }
+        // 2. CALCULAR TOTALES VIA SQL (Mucho más eficiente que sumar en PHP)
+        // Clonamos la consulta base para no afectar el ordenamiento posterior
+        $totalIngresos = (clone $query)->where('type', 'ingreso')->sum('amount');
+        $totalGastos   = (clone $query)->where('type', 'gasto')->sum('amount');
+        $saldoPeriodo  = $totalIngresos - $totalGastos;
 
-        // Ordenar: Fecha descendente, luego Hora descendente
+        // 3. Obtener los registros para la tabla
+        // Usamos get() para que SALGA TODO EN LA IMPRESIÓN.
+        // Si son muchísimos datos, el navegador tendrá una barra de scroll larga,
+        // pero al imprimir saldrán todas las hojas necesarias.
         $transactions = $query->orderBy('date', 'desc')
                               ->orderBy('time', 'desc')
                               ->get();
-
-        // 4. Calcular totales de lo que se ha filtrado (¡Muy útil!)
-        $totalIngresos = $transactions->where('type', 'ingreso')->sum('amount');
-        $totalGastos = $transactions->where('type', 'gasto')->sum('amount');
-        $saldoPeriodo = $totalIngresos - $totalGastos;
 
         return view('reports.detailed', compact(
             'transactions',
@@ -120,7 +115,7 @@ class ReportController extends Controller
             'dateTo',
             'accountId',
             'categoryId',
-            'totalIngresos',
+            'totalIngresos', // Ahora son totales reales de SQL
             'totalGastos',
             'saldoPeriodo'
         ));
