@@ -214,6 +214,7 @@
         <div class="navbar-links">
             <a href="{{ route('reports.expenses') }}">Gastos</a>
             <a href="{{ route('reports.income') }}">Ingresos</a>
+            <a href="{{ route('reports.detailed') }}" style="color:#007bff;">Detallado</a>
             <a href="{{ route('transactions.index') }}" style="color: #007bff;">Historial</a>
             <a href="{{ route('categorias.index') }}">Categorías</a>
             <a href="{{ route('cuentas.index') }}">Cuentas</a>

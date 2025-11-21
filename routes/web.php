@@ -22,6 +22,8 @@ Route::get('/informes/ingresos', [ReportController::class, 'income'])->name('rep
 Route::get('/informes/semanal', [WeeklyReportController::class, 'index'])->name('reports.weekly');
 // Ruta para el informe mensual
 Route::get('/informes/mensual', [MonthlyReportController::class, 'index'])->name('reports.monthly');
+// Ruta para el informe detallado
+Route::get('/informes/detallado', [ReportController::class, 'detailed'])->name('reports.detailed');
 
 // --- RUTAS DE GESTIÓN (CRUD) ---
 Route::resource('categorias', CategoryController::class)->parameters(['categorias' => 'category']);

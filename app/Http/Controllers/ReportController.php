@@ -72,4 +72,57 @@ class ReportController extends Controller
             'date_to'
         ));
     }
+
+    /**
+     * Reporte Detallado con Filtros Múltiples
+     */
+    public function detailed(Request $request): View
+    {
+        // 1. Obtener datos para los selectores del filtro
+        $accounts = \App\Models\Account::all();
+        $categories = \App\Models\Category::orderBy('name')->get();
+
+        // 2. Valores por defecto para los filtros
+        $dateFrom = $request->input('date_from', now()->startOfMonth()->toDateString());
+        $dateTo = $request->input('date_to', now()->endOfMonth()->toDateString());
+        $accountId = $request->input('account_id');
+        $categoryId = $request->input('category_id');
+
+        // 3. Construcción de la consulta
+        $query = Transaction::with(['account', 'category'])
+            ->whereBetween('date', [$dateFrom, $dateTo]);
+
+        // Filtro opcional por Cuenta
+        if ($accountId) {
+            $query->where('account_id', $accountId);
+        }
+
+        // Filtro opcional por Categoría
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
+        // Ordenar: Fecha descendente, luego Hora descendente
+        $transactions = $query->orderBy('date', 'desc')
+                              ->orderBy('time', 'desc')
+                              ->get();
+
+        // 4. Calcular totales de lo que se ha filtrado (¡Muy útil!)
+        $totalIngresos = $transactions->where('type', 'ingreso')->sum('amount');
+        $totalGastos = $transactions->where('type', 'gasto')->sum('amount');
+        $saldoPeriodo = $totalIngresos - $totalGastos;
+
+        return view('reports.detailed', compact(
+            'transactions',
+            'accounts',
+            'categories',
+            'dateFrom',
+            'dateTo',
+            'accountId',
+            'categoryId',
+            'totalIngresos',
+            'totalGastos',
+            'saldoPeriodo'
+        ));
+    }
 }
