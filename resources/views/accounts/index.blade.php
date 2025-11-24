@@ -1,15 +1,11 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestión de Cuentas</title>
+@extends('layouts.app')
+
+@section('title', 'Arqueo de Caja')
+
+@push('styles')
     <style>
         /* (Tus estilos de listado) */
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f7f6; }
-        .navbar { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .navbar a { text-decoration: none; color: #333; font-weight: bold; margin: 0 10px; }
-        .navbar a.btn { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 4px; }
-        .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .content { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
         .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
         .alert-error { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
@@ -21,23 +17,10 @@
         .btn-edit { color: #007bff; text-decoration: none; }
         .btn-delete { color: #dc3545; background: none; border: none; cursor: pointer; padding: 0; }
     </style>
-</head>
-<body>
-    
-    <nav class="navbar">
-        <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
-        <div>
-            <a href="{{ route('reports.expenses') }}">Informe Gastos</a>
-            <a href="{{ route('reports.income') }}">Informe Ingresos</a>
-            
-            <a href="{{ route('transactions.index') }}">Transacciones</a>
-            <a href="{{ route('categorias.index') }}">Categorías</a>
-            <a href="{{ route('cuentas.index') }}">Cuentas</a>
-            <a href="{{ route('transactions.create') }}" class="btn">+ Nueva Transacción</a>
-        </div>
-    </nav>
+@endpush
 
-    <div class="container">
+@section('content')
+    <div class="content">
         <h1>Gestión de Cuentas</h1>
 
         @if(session('success'))
@@ -88,5 +71,5 @@
             </tbody>
         </table>
     </div>
-</body>
-</html>
+
+@endsection

@@ -23,6 +23,7 @@
         .btn { padding: 9px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; font-size: 0.9rem; }
         .btn-filter { background-color: #007bff; }
         .btn-print { background-color: #343a40; display: flex; align-items: center; gap: 5px; }
+        .btn-create { background-color: #1c2222ff; text-decoration: none; display: inline-block; margin-bottom: 15px; }
         
         /* Resumen de Totales */
         .summary-cards { display: flex; gap: 20px; margin-bottom: 20px; }
@@ -142,6 +143,10 @@
                 <h3>Saldo del Periodo</h3>
                 <div class="amount">{{ number_format($saldoPeriodo, 2) }}</div>
             </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+            <a class="btn btn-create" href="{{ route('transactions.create') }}">Nueva Transacción</a>
         </div>
 
         <table>
