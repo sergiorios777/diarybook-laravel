@@ -79,14 +79,13 @@ class TransactionController extends Controller
 
         // Convertimos automáticamente montos negativos → gasto y monto positivo
         $rawAmount = $request->input('amount');
+        $validated['amount'] = abs($rawAmount);
 
-        if ($rawAmount < 0) {
-            $validated['amount'] = abs($rawAmount); // Guardamos siempre positivo
-            $validated['type']    = 'gasto';
-        } else {
-            $validated['amount'] = $rawAmount;
-            $validated['type']    = 'ingreso';
-        }
+        /*
+        // Forzamos el tipo según la categoría seleccionada
+        $category = Category::find($request->category_id);
+        $validated['type']    = $category ? $category->type : $request->type;
+        */
 
         // Auto-asignación de categoría si no viene
         if (empty($validated['category_id'])) {
