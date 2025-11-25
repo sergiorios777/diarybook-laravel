@@ -58,11 +58,23 @@ class WeeklyReportController extends Controller
             'gasto' => []
         ];
 
+        // Definimos las categorías que NO queremos ver en el reporte
+        $excludedCategories = ['Transferencias internas recibidas [T.INT]', 
+                               'Transferencias internas enviadas [T.INT]']; // Puedes agregar más aquí si necesitas
+
         // Precargamos nombres de categorías para que aparezcan aunque no tengan datos (opcional)
         // Aquí lo haremos dinámico: solo categorías con movimiento en la semana
         foreach ($transactions as $tx) {
             $catName = $tx->category ? $tx->category->name : 'Sin Categoría';
-            $dateKey = $tx->date; // YYYY-MM-DD (asumiendo que el cast es string o date)
+
+            // Excluir categorías definidas
+            if (in_array($catName, $excludedCategories)) {
+                continue;
+            }
+
+            $dateKey = $tx->date instanceof \Carbon\Carbon 
+                ? $tx->date->format('Y-m-d') 
+                : substr($tx->date, 0, 10); // Aseguramos formato fecha string
             
             // Aseguramos que la celda exista
             if (!isset($matrix[$tx->type][$catName][$dateKey])) {

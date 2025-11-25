@@ -148,13 +148,13 @@ class TransactionController extends Controller
 
         // 2. Lógica de monto negativo/positivo (Idéntica al store) [cite: 210]
         $rawAmount = $request->input('amount');
-        if ($rawAmount < 0) {
-            $validated['amount'] = abs($rawAmount);
-            $validated['type']    = 'gasto';
-        } else {
-            $validated['amount'] = $rawAmount;
-            $validated['type']    = 'ingreso';
-        }
+        $validated['amount'] = abs($rawAmount);
+
+        /*
+        // Forzamos el tipo según la categoría seleccionada
+        $category = Category::find($request->category_id);
+        $validated['type']    = $category ? $category->type : $request->type;
+        */
 
         // 3. Detectar si la categoría cambió para "aprender"
         // Guardamos el ID anterior antes de actualizar
