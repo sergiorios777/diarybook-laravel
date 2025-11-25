@@ -1,4 +1,8 @@
-@extends('layouts.app') @section('title', 'Dashboard') @push('styles') <style>
+@extends('layouts.app1')
+
+@section('title', 'Dashboard')
+
+@push('styles') <style>
         /* Estilos que SOLO afectan al dashboard */
         .container { max-width: 100%; } /* Ahora ocupamos el ancho disponible */
         .card-total { background-color: #333; color: white; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 25px; }
@@ -13,7 +17,8 @@
     </style>
 @endpush
 
-@section('content') <div class="container">
+@section('content')
+    <div class="container">
 
         <div class="card-total">
             <h2>Saldo Total (Todas las Cuentas)</h2>
