@@ -74,8 +74,17 @@ class MonthlyReportController extends Controller
         // 5. LLENAR MATRIZ
         $matrix = ['ingreso' => [], 'gasto' => []];
 
+        // Definimos las categorías que NO queremos ver en el reporte
+        $excludedCategories = ['Transferencias internas recibidas [T.INT]', 
+                               'Transferencias internas enviadas [T.INT]'];
+
         foreach ($transactions as $tx) {
             $catName = $tx->category ? $tx->category->name : 'Sin Categoría';
+            
+            // Excluir categorías definidas
+            if (in_array($catName, $excludedCategories)) {
+                continue;
+            }
             
             // Obtenemos la fecha de la transacción
             $txDate = Carbon::parse($tx->date);
