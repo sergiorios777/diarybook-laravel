@@ -2,183 +2,180 @@
 
 @section('title', 'Registrar Transacción')
 
-@push('styles')
-    <style>
-        /* --- ESTILOS DEL FORMULARIO --- */
-        .form-container { 
-            max-width: 700px; /* Un poco más ancho para que respire mejor */
-            margin: 0 auto; 
-            padding: 30px; 
-            background-color: #fff; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-        }
-        
-        h1 { text-align: center; color: #343a40; margin-top: 0; margin-bottom: 25px; font-size: 1.5rem; }
-        
-        .form-row { display: flex; gap: 20px; margin-bottom: 15px; }
-        .form-group { margin-bottom: 15px; flex: 1; }
-        
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 0.9rem; }
-        
-        input, select { 
-            width: 100%; 
-            padding: 10px 12px; 
-            box-sizing: border-box; 
-            border: 1px solid #ced4da; 
-            border-radius: 4px; 
-            font-size: 1rem; 
-            transition: border-color 0.15s ease-in-out;
-        }
-        
-        input:focus, select:focus { 
-            border-color: #007bff; 
-            outline: none; 
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        }
-        
-        /* Botón Principal */
-        button[type="submit"] { 
-            width: 100%; 
-            background-color: #007bff; 
-            color: white; 
-            padding: 12px; 
-            border: none; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            font-size: 16px; 
-            font-weight: 600; 
-            transition: background 0.3s; 
-            margin-top: 10px;
-        }
-        button[type="submit"]:hover { background-color: #0056b3; }
-        
-        /* Alertas */
-        .alert-success { 
-            background-color: #d4edda; 
-            color: #155724; 
-            padding: 15px; 
-            border-radius: 4px; 
-            margin-bottom: 20px; 
-            text-align: center; 
-            border: 1px solid #c3e6cb;
-        }
-
-        /* Estilo para feedback visual (Auto-asignación) */
-        .auto-selected {
-            border: 2px solid #28a745 !important;
-            background-color: #f8fff9 !important;
-        }
-        #auto-label {
-            font-size: 0.85em;
-            transition: all 0.3s;
-            margin-left: 5px;
-        }
-    </style>
-@endpush
-
 @section('content')
+    <div class="max-w-4xl mx-auto">
+        <!-- Título -->
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 dark:text-gray-100 mb-8">
+            Registrar Movimiento
+        </h1>
 
-    <div class="form-container">
-        <h1>Registrar Movimiento</h1>
-
+        <!-- Mensaje de éxito -->
         @if(session('success'))
-            <div class="alert alert-success">
+            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-200 rounded-lg text-center font-medium">
                 {{ session('success') }}
             </div>
         @endif
 
-        <form action="{{ route('transactions.store') }}" method="POST">
-            @csrf
+        <!-- Formulario -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 lg:p-10">
+            <form action="{{ route('transactions.store') }}" method="POST" class="space-y-6">
+                @csrf
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="date">Fecha:</label>
-                    <input type="date" id="date" name="date" value="{{ date('Y-m-d') }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="time">Hora:</label>
-                    <input type="time" id="time" name="time" value="{{ date('H:i') }}" required>
-                </div>
-            </div>
+                <!-- Fecha y Hora -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="date" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Fecha <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date"
+                               id="date"
+                               name="date"
+                               value="{{ date('Y-m-d') }}"
+                               required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    </div>
 
-            <div class="form-group">
-                <label for="description">Descripción:</label>
-                <input type="text" id="description" name="description" placeholder="Ej: Pago de servicios, Venta del día..." required autofocus autocomplete="off">
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="amount">Monto:</label>
-                    <input type="number" id="amount" name="amount" step="0.01" placeholder="0.00" required style="font-size: 1.2em; font-weight: bold;">
-                    <small style="color: #6c757d; font-size: 0.85em; margin-top: 5px; display: block;">
-                        ✅ Usa negativo (-) para gastos
-                    </small>
-                </div>
-                <div class="form-group">
-                    <label for="account_id">Cuenta:</label>
-                    <select id="account_id" name="account_id" required>
-                        <option value="">-- Seleccione --</option>
-                        @foreach($accounts as $account)
-                            <option value="{{ $account->id }}">{{ $account->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group" style="flex: 2;">
-                    <label for="category_id">Categoría <span id="auto-label" style="color:#28a745;font-weight:bold;"></span>:</label>
-                    <select id="category_id" name="category_id">
-                        <option value="">-- Seleccione Categoría --</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" data-type="{{ $category->type }}">
-                                {{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div>
+                        <label for="time" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Hora <span class="text-red-500">*</span>
+                        </label>
+                        <input type="time"
+                               id="time"
+                               name="time"
+                               value="{{ date('H:i') }}"
+                               required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    </div>
                 </div>
 
-                <div class="form-group" style="flex: 1;">
-                    <label for="type">Tipo:</label>
-                    <select id="type" name="type" required>
-                        <option value="">-- Tipo --</option>
-                        <option value="ingreso">Ingreso</option>
-                        <option value="gasto">Gasto</option>
-                    </select>
+                <!-- Descripción -->
+                <div>
+                    <label for="description" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Descripción <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text"
+                           id="description"
+                           name="description"
+                           placeholder="Ej: Pago de servicios, Venta del día..."
+                           required
+                           autofocus
+                           autocomplete="off"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                 </div>
-            </div>
 
-            <div class="form-group">
-                <button type="submit">Guardar Transacción</button>
-            </div>
-        </form>
+                <!-- Monto y Cuenta -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="amount" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Monto <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number"
+                               id="amount"
+                               name="amount"
+                               step="0.01"
+                               placeholder="0.00"
+                               required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-lg font-bold focus:ring-2 focus:ring-blue-4 focus:ring-blue-500 focus:border-transparent transition">
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                            Usa signo negativo (−) para gastos
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="account_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Cuenta <span class="text-red-500">*</span>
+                        </label>
+                        <select id="account_id"
+                                name="account_id"
+                                required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            <option value="">-- Seleccione cuenta --</option>
+                            @foreach($accounts as $account)
+                                <option value="{{ $account->id }}">{{ $account->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Categoría y Tipo -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2">
+                        <label for="category_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Categoría
+                            <span id="auto-label" class="text-green-600 dark:text-green-400 font-bold text-xs"></span>
+                        </label>
+                        <select id="category_id"
+                                name="category_id"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition
+                                    ring-0 ring-green-500/0 
+                                    data-auto:ring-4 data-auto:ring-green-500/30 data-auto:border-green-600 data-auto:shadow-lg data-auto:shadow-green-500/10">
+                            <option value="">-- Seleccione categoría --</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" data-type="{{ $category->type }}"
+                                        {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="type" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Tipo <span class="text-red-500">*</span>
+                        </label>
+                        <select id="type"
+                                name="type"
+                                required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            <option value="">-- Tipo --</option>
+                            <option value="ingreso">Ingreso</option>
+                            <option value="gasto">Gasto</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Botón Guardar -->
+                <div class="pt-4">
+                    <button type="submit"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg text-lg transition duration-200 shadow-md hover:shadow-xl transform hover:-translate-y-0.5">
+                        Guardar Transacción
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-
 @endsection
 
 @push('scripts')
-    <script>
+<script>
     document.addEventListener('DOMContentLoaded', function () {
         const descriptionInput = document.getElementById('description');
-        const categorySelect   = document.getElementById('category_id');
-        const typeSelect       = document.getElementById('type');
-        const amountInput      = document.getElementById('amount');
-        const autoLabel        = document.getElementById('auto-label');
+        const categorySelect = document.getElementById('category_id');
+        const typeSelect = document.getElementById('type');
+        const amountInput = document.getElementById('amount');
+        const autoLabel = document.getElementById('auto-label');
 
-        // Reglas del motor inteligente (Inyectadas desde PHP)
         const rules = {!! json_encode(
             \App\Models\CategorizationRule::all()->map(function($r) {
                 return [
                     'keyword' => $r->keyword ? strtolower($r->keyword) : null,
-                    'regex'   => $r->regex,
-                    'cat_id'  => $r->category_id,
-                    'type'    => $r->type
+                    'regex' => $r->regex,
+                    'cat_id' => $r->category_id,
+                    'type' => $r->type
                 ];
             })->filter()->values()
         ) !!};
 
-        // Función principal de sugerencia
+        function applyAutoStyle() {
+            categorySelect.classList.remove('ring-0', 'ring-green-500/0');
+            categorySelect.classList.add('ring-4', 'ring-green-500/30', 'border-green-600', 'shadow-lg', 'shadow-green-500/10');
+        }
+
+        function removeAutoStyle() {
+            categorySelect.classList.remove('ring-4', 'ring-green-500/30', 'border-green-600', 'shadow-lg', 'shadow-green-500/10');
+            categorySelect.classList.add('ring-0', 'ring-green-500/0');
+        }
+
         function suggest() {
             if (!descriptionInput.value.trim()) {
                 resetAuto();
@@ -188,47 +185,42 @@
             const desc = descriptionInput.value.toLowerCase();
             const rawAmount = parseFloat(amountInput.value) || 0;
             const inferredType = rawAmount < 0 ? 'gasto' : 'ingreso';
-
             let matched = false;
 
             for (const rule of rules) {
                 if (rule.type !== inferredType && typeSelect.value !== '') continue;
 
                 const matchKeyword = rule.keyword && desc.includes(rule.keyword);
-                const matchRegex   = rule.regex && new RegExp(rule.regex, 'i').test(desc);
+                const matchRegex = rule.regex && new RegExp(rule.regex, 'i').test(desc);
 
                 if (matchKeyword || matchRegex) {
-                    const option = categorySelect.querySelector(`option[value="${rule.cat_id}"]`);
-                    if (option) {
+                    if (categorySelect.value != rule.cat_id) {
                         categorySelect.value = rule.cat_id;
-                        autoLabel.textContent = ' (auto)';
-                        categorySelect.classList.add('auto-selected');
-                        syncTypeFromCategory();  // ← Sincroniza el tipo
-                        matched = true;
-                        break;
+                        syncTypeFromCategory();
                     }
+                    autoLabel.textContent = ' (auto)';
+                    applyAutoStyle();
+                    matched = true;
+                    break;
                 }
             }
 
-            if (!matched) {
-                resetAuto();
-            }
+            if (!matched) resetAuto();
         }
 
-        // Sincroniza Tipo según la categoría seleccionada
         function syncTypeFromCategory() {
-            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-            if (selectedOption && selectedOption.value !== '') {
-                const categoryType = selectedOption.getAttribute('data-type');
-                if (categoryType === 'ingreso' || categoryType === 'gasto') {
-                    typeSelect.value = categoryType;
+            const selected = categorySelect.options[categorySelect.selectedIndex];
+            if (selected?.value) {
+                const catType = selected.getAttribute('data-type');
+                if (catType === 'ingreso' || catType === 'gasto') {
+                    typeSelect.value = catType;
                 }
             }
         }
 
         function resetAuto() {
             autoLabel.textContent = '';
-            categorySelect.classList.remove('auto-selected');
+            removeAutoStyle();
         }
 
         // Eventos
@@ -236,19 +228,16 @@
         amountInput?.addEventListener('input', suggest);
         amountInput?.addEventListener('change', suggest);
 
-        // Cambio manual de categoría
-        categorySelect?.addEventListener('change', function() {
+        categorySelect?.addEventListener('change', function () {
             syncTypeFromCategory();
-            if (categorySelect.value !== '') {
+            if (this.value && !autoLabel.textContent.includes('auto')) {
                 autoLabel.textContent = ' (seleccionada)';
-                categorySelect.classList.add('auto-selected');
-            } else {
-                resetAuto();
+                applyAutoStyle(); // opcional: también resaltar si elige manual
             }
         });
 
         // Ejecutar al cargar
         suggest();
     });
-    </script>
+</script>
 @endpush

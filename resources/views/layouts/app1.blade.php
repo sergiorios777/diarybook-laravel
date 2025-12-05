@@ -1,204 +1,45 @@
 <!DOCTYPE html>
-<html lang="es" x-data="{ openSidebar: false }">
+<html lang="es" x-data="{ sidebarOpen: false, darkMode: false }" :class="darkMode ? 'dark' : ''">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Contable - @yield('title', 'Panel')</title>
+    <title>@yield('title', 'Panel')</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
+    {{-- Breeze + Tailwind --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* SIDEBAR */
-        .sidebar {
-            width: 260px;
-            background-color: #343a40;
-            color: #c2c7d0;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            transition: transform .3s ease;
-        }
-
-        /* HEADER MÓVIL */
-        .mobile-header {
-            display: none;
-            background: #343a40;
-            color: white;
-            padding: 12px 15px;
-            align-items: center;
-            gap: 10px;
-        }
-        .mobile-header button {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: white;
-            cursor: pointer;
-        }
-
-        /* Sidebar en mobile: oculto por defecto */
-        @media(max-width: 768px){
-            .mobile-header {
-                display: flex;
-            }
-
-            .sidebar {
-                position: fixed;
-                height: 100%;
-                top: 0;
-                left: 0;
-                transform: translateX(-260px);
-                transition: transform .3s ease;
-                z-index: 1000;
-            }
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            /* Botón cerrar visible solo en mobile */
-            .close-sidebar-btn {
-                display: block;
-                background: none;
-                border: none;
-                font-size: 22px;
-                color: white;
-                cursor: pointer;
-            }
-        }
-
-        /* En escritorio, el botón cerrar NO se muestra */
-        @media(min-width: 769px){
-            .close-sidebar-btn {
-                display: none;
-            }
-        }
-
-        /* MAIN */
-        .main-content {
-            flex-grow: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        /* Menú */
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: #c2c7d0;
-            text-decoration: none;
-            border-left: 3px solid transparent;
-            transition: .2s;
-        }
-        .sidebar-menu a:hover {
-            background: #494e53;
-            color: white;
-        }
-        .sidebar-menu a.active {
-            background: #007bff;
-            color: white;
-            border-left-color: white;
-        }
-
-        @media print {
-            .sidebar { display: none; }
-        }
-    </style>
+    {{-- Alpine.js --}}
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     @stack('styles')
 </head>
-<body x-data="{ openSidebar: false }">
 
-    <!-- HEADER SOLO EN MÓVIL -->
-    <div class="mobile-header">
-        <button @click="openSidebar = true">☰</button>
-        <strong>Mi Libro Diario</strong>
-    </div>
+<body class="bg-gray-100 dark:bg-gray-900 flex min-h-screen">
+    @include('layouts.partials.sidebar')
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar" :class="{ 'open': openSidebar }">
-        <div class="sidebar-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>📘 Mi Libro Diario</h3>
-            <!-- close button móvil -->
-            <button 
-                @click="openSidebar=false" 
-                class="close-btn-mobile">
-                ✕
+    <div class="flex-1 flex flex-col min-h-screen"> <!-- ← min-h-screen aquí -->
+        <!-- Header fijo -->
+        <header class="h-16 bg-white dark:bg-gray-800 shadow flex items-center px-4 justify-between z-40">
+            <button class="lg:hidden text-gray-700 dark:text-gray-300 text-2xl" @click="sidebarOpen = true">
+                Menu
             </button>
-        </div>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                @yield('title')
+            </h2>
+            <button @click="darkMode = !darkMode"
+                    class="px-3 py-1 rounded text-sm bg-gray-200 dark:bg-gray-700 dark:text-gray-200">
+                <span x-show="!darkMode">Moon Modo oscuro</span>
+                <span x-show="darkMode">Sun Modo claro</span>
+            </button>
+        </header>
 
-        <nav class="sidebar-menu">
-            <div class="user-info">Hola, {{ Auth::user()->name }}</div>
-
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();">
-                    Salir
-                </a>
-            </form>
-
-            <div class="menu-label">Principal</div>
-
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i>📊</i> Dashboard
-            </a>
-
-            <div class="menu-label">Operaciones</div>
-
-            <a href="{{ route('transactions.create') }}" class="{{ request()->routeIs('transactions.create') ? 'active' : '' }}">
-                <i>➕</i> Nueva Transacción
-            </a>
-            <a href="{{ route('transactions.index') }}" class="{{ request()->routeIs('transactions.index*') ? 'active' : '' }}">
-                <i>📝</i> Historial / Libro
-            </a>
-            <a href="{{ route('cash_counts.index') }}" class="{{ request()->routeIs('cash_counts.index') ? 'active' : '' }}">
-                <i>💰</i> Arqueo de Caja
-            </a>
-
-            <div class="menu-label">Reportes</div>
-
-            <a href="{{ route('reports.weekly') }}" class="{{ request()->routeIs('reports.weekly') ? 'active' : '' }}">
-                <i>📅</i> Semanal
-            </a>
-            <a href="{{ route('reports.monthly') }}" class="{{ request()->routeIs('reports.monthly') ? 'active' : '' }}">
-                <i>🗓️</i> Mensual
-            </a>
-            <a href="{{ route('reports.detailed') }}" class="{{ request()->routeIs('reports.detailed') ? 'active' : '' }}">
-                <i>🔍</i> Detallado
-            </a>
-            <a href="{{ route('reports.income') }}" class="{{ request()->routeIs('reports.income') ? 'active' : '' }}">
-                <i>📈</i> Ingresos
-            </a>
-            <a href="{{ route('reports.expenses') }}" class="{{ request()->routeIs('reports.expenses') ? 'active' : '' }}">
-                <i>📉</i> Gastos
-            </a>
-
-            <div class="menu-label">Configuración</div>
-
-            <a href="{{ route('cuentas.index') }}" class="{{ request()->routeIs('cuentas.*') ? 'active' : '' }}">
-                <i>💳</i> Cuentas
-            </a>
-            <a href="{{ route('categorias.index') }}" class="{{ request()->routeIs('categorias.*') ? 'active' : '' }}">
-                <i>📂</i> Categorías
-            </a>
-        </nav>
-    </aside>
-
-    <main class="main-content">
-        @yield('content')
-    </main>
-
+        <!-- Contenido con scroll independiente -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="p-6">
+                @yield('content')
+            </div>
+        </main>
+    </div>
     @stack('scripts')
-
 </body>
 </html>
