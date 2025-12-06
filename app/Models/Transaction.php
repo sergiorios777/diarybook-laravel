@@ -38,4 +38,16 @@ class Transaction extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function scopeExcludeInternalTransfers($query)
+    {
+        $excluded = [
+            'Transferencias internas recibidas [T.INT]',
+            'Transferencias internas enviadas [T.INT]'
+        ];
+
+        return $query->whereHas('category', function ($q) use ($excluded) {
+            $q->whereNotIn('name', $excluded);
+        }); // ->orWhereNull('category_id') opcional: incluir sin categoría
+    }
 }

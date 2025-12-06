@@ -194,4 +194,5 @@ class TransactionController extends Controller
         return redirect()->route('transactions.index')
                          ->with('success', '¡Transacción eliminada correctamente!');
     }
+
 }

@@ -42,10 +42,12 @@ class DashboardController extends Controller
                 'ingresos' => \App\Models\Transaction::where('type', 'ingreso')
                     ->whereMonth('date', $date->month)
                     ->whereYear('date', $date->year)
+                    ->excludeInternalTransfers()  // ← ¡MÁGICO!
                     ->sum('amount'),
                 'gastos' => \App\Models\Transaction::where('type', 'gasto')
                     ->whereMonth('date', $date->month)
                     ->whereYear('date', $date->year)
+                    ->excludeInternalTransfers()  // ← ¡MÁGICO!
                     ->sum('amount'),
             ];
         });

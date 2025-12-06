@@ -58,7 +58,7 @@ class WeeklyReportController extends Controller
             'gasto' => []
         ];
 
-        // Definimos las categorías que NO queremos ver en el reporte
+        // Definimos las categorías que NO queremos ver en el reporte.
         $excludedCategories = ['Transferencias internas recibidas [T.INT]', 
                                'Transferencias internas enviadas [T.INT]']; // Puedes agregar más aquí si necesitas
 

@@ -25,6 +25,7 @@ class ReportController extends Controller
             )
             ->where('type', 'gasto') // <-- gasto
             ->whereBetween('date', [$date_from, $date_to])
+            ->excludeInternalTransfers()  // ← ¡MÁGICO!
             ->groupBy('category_id')
             ->orderBy('total_gastos', 'desc')
             ->with('category')
@@ -50,13 +51,22 @@ class ReportController extends Controller
         $date_from = $request->input('date_from', now()->startOfMonth()->toDateString());
         $date_to = $request->input('date_to', now()->endOfMonth()->toDateString());
 
-        $reportData = Transaction::query()
+        /*$reportData = Transaction::query()
             ->select(
                 'category_id', 
                 DB::raw('SUM(amount) as total_ingresos') // <-- total_ingresos
             )
             ->where('type', 'ingreso') // <-- ingreso
             ->whereBetween('date', [$date_from, $date_to])
+            ->groupBy('category_id')
+            ->orderBy('total_ingresos', 'desc')
+            ->with('category')
+            ->get();*/
+        $reportData = Transaction::query()
+            ->select('category_id', DB::raw('SUM(amount) as total_ingresos'))
+            ->where('type', 'ingreso')
+            ->whereBetween('date', [$date_from, $date_to])
+            ->excludeInternalTransfers()  // ← ¡MÁGICO!
             ->groupBy('category_id')
             ->orderBy('total_ingresos', 'desc')
             ->with('category')

@@ -48,11 +48,13 @@
                 $ingresosMes = \App\Models\Transaction::where('type', 'ingreso')
                     ->whereMonth('date', now()->month)
                     ->whereYear('date', now()->year)
+                    ->excludeInternalTransfers()  // ← ¡MÁGICO!
                     ->sum('amount');
 
                 $gastosMes = \App\Models\Transaction::where('type', 'gasto')
                     ->whereMonth('date', now()->month)
                     ->whereYear('date', now()->year)
+                    ->excludeInternalTransfers()  // ← ¡MÁGICO!
                     ->sum('amount');
 
                 $balanceMes = $ingresosMes - $gastosMes;
@@ -156,20 +158,21 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @forelse(\App\Models\Transaction::with(['account', 'category'])->latest()->take(8)->get() as $t)
+                        @forelse(\App\Models\Transaction::with(['account', 'category'])->orderBy('date', 'desc')->orderBy('time', 'desc')->latest()->take(8)->get() as $t)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                    {{ \Carbon\Carbon::parse($t->date)->format('d/m/Y') }}
+                                <td class="px-6 py-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <div>{{ \Carbon\Carbon::parse($t->date)->format('d/m/Y') }}</div>
+                                    <div>{{ \Carbon\Carbon::parse($t->time)->format('H:i') }}</div>
                                 </td>
-                                <td class="px-6 py-4 font-medium">
+                                <td class="px-6 py-2 font-medium">
                                     {{ Str::limit($t->description, 40) }}
                                 </td>
-                                <td class="px-6 py-4 text-sm">
+                                <td class="px-6 py-2 text-sm">
                                     <span class="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                                         {{ $t->account->name }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right font-bold text-lg">
+                                <td class="px-6 py-2 text-right font-bold text-lg">
                                     <span class="{{ $t->type == 'ingreso' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
                                         {{ $t->type == 'ingreso' ? '+' : '-' }}${{ number_format($t->amount, 2) }}
                                     </span>
@@ -189,7 +192,7 @@
 
         <!-- VERSIÓN MÓVIL: Tarjetas apiladas (< lg) -->
         <div class="lg:hidden space-y-4">
-            @forelse(\App\Models\Transaction::with(['account', 'category'])->latest()->take(8)->get() as $t)
+            @forelse(\App\Models\Transaction::with(['account', 'category'])->orderBy('date', 'desc')->orderBy('time', 'desc')->latest()->take(8)->get() as $t)
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 hover:shadow-lg transition">
                     <div class="flex justify-between items-start mb-3">
                         <div>
