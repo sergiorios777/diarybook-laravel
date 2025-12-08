@@ -1,464 +1,430 @@
 @extends('layouts.app1')
-
 @section('title', 'Arqueo de Caja')
 
-@push('styles')
-    <style>
-        /* --- ESTILOS ESPECÍFICOS DEL ARQUEO --- */
-        
-        .container-fluid {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        h1 { text-align: center; color: #343a40; margin-bottom: 30px; font-size: 1.8rem; }
-
-        /* Panel Superior (Resumen) */
-        .summary-panel { 
-            background: #fff; 
-            padding: 25px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            flex-wrap: wrap; 
-            gap: 20px; 
-            margin-bottom: 30px;
-        }
-        .summary-item { flex: 1; min-width: 250px; text-align: center; }
-        .summary-item label { display: block; font-size: 0.9rem; color: #6c757d; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-        .summary-value { font-size: 2.2rem; font-weight: 700; color: #343a40; }
-        
-        /* Comparador */
-        .comparator { 
-            border-left: 1px solid #eee; 
-            padding-left: 20px; 
-        }
-        @media (max-width: 768px) { .comparator { border-left: none; border-top: 1px solid #eee; padding-left: 0; padding-top: 20px; } }
-
-        .diff-positive { color: #28a745; font-weight: bold; } 
-        .diff-negative { color: #dc3545; font-weight: bold; } 
-        .diff-neutral { color: #6c757d; font-weight: bold; }
-
-        /* Grid de Tablas */
-        .grid-money { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
-        @media (max-width: 768px) { .grid-money { grid-template-columns: 1fr; } }
-
-        /* Tarjetas de Conteo */
-        .card-count { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e9ecef; }
-        .card-header { 
-            background: #f8f9fa; 
-            padding: 12px; 
-            border-bottom: 1px solid #e9ecef; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            text-align: center; 
-            color: #495057;
-        }
-        .card-body { padding: 0; }
-
-        /* Tablas Internas */
-        table { width: 100%; border-collapse: collapse; }
-        th { background-color: #fff; font-size: 0.8rem; color: #adb5bd; text-align: center; padding: 10px; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid #f1f1f1; }
-        td { padding: 8px 15px; border-bottom: 1px solid #f8f9fa; vertical-align: middle; }
-        
-        /* Inputs de cantidad */
-        input[type="number"] { 
-            width: 100%; 
-            padding: 8px; 
-            border: 1px solid #ced4da; 
-            border-radius: 4px; 
-            text-align: center; 
-            font-size: 1.1rem; 
-            color: #495057;
-            transition: border-color 0.2s; 
-        }
-        input[type="number"]:focus { border-color: #007bff; outline: none; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.15); }
-        
-        .subtotal-display { font-family: 'Consolas', monospace; font-size: 1.1rem; text-align: right; font-weight: 600; color: #495057; }
-        .section-total { padding: 15px; background-color: #f8fff9; text-align: right; font-weight: 700; font-size: 1.2rem; color: #28a745; border-top: 1px solid #e9ecef; }
-
-        /* Selectores y Botones */
-        select { padding: 8px; border-radius: 4px; border: 1px solid #ced4da; font-size: 0.95rem; width: 100%; max-width: 300px; }
-        
-        .btn-refresh {
-            padding: 8px 12px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s;
-        }
-        .btn-refresh:hover { background-color: #138496; }
-
-        .btn-action-group { text-align: center; margin-bottom: 40px; display: flex; gap: 10px; justify-content: center; }
-        .btn-reset { background-color: #6c757d; color: white; }
-        .btn-reset:hover { background-color: #5a6268; }
-        .btn-print { background-color: #343a40; color: white; display: flex; align-items: center; gap: 8px; }
-        .btn-print:hover { background-color: #23272b; }
-    </style>
-@endpush
-
 @section('content')
+<div class="max-w-5xl mx-auto" x-data="cashCounter()">
+    <!-- TÍTULO -->
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-100 flex items-center justify-center gap-3">
+            Arqueo de Caja
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-2">Conteo físico vs sistema</p>
+    </div>
 
-    <div class="container-fluid" x-data="cashCounter()">
-        
-        <h1>💰 Arqueo de Caja</h1>
-
-        <div class="summary-panel">
-            <div class="summary-item">
-                <label>Total Efectivo Contado</label>
-                <div class="summary-value" x-text="formatCurrency(grandTotal)"></div>
+    <!-- PANEL SUPERIOR: RESUMEN + COMPARADOR -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Total Contado -->
+            <div class="text-center">
+                <p class="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+                    Total Efectivo Contado
+                </p>
+                <p class="text-5xl font-bold text-gray-800 dark:text-gray-100">
+                    S/ <span x-text="formatCurrency(grandTotal)"></span>
+                </p>
             </div>
-            
-            <div class="summary-item comparator">
-                <label>Comparar con Sistema</label>
-                
-                <div style="margin-bottom: 15px; display: flex; justify-content: center; gap: 10px; align-items: center;">
-                    <select x-model="selectedAccountId" @change="fetchBalance()">
+
+            <!-- Comparador con Sistema -->
+            <div class="text-center lg:border-l lg:border-gray-300 dark:lg:border-gray-700 lg:pl-8">
+                <p class="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">
+                    Comparar con Sistema
+                </p>
+
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <select x-model="selectedAccountId" @change="fetchBalance()"
+                            class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
                         <option value="">-- Seleccionar Cuenta --</option>
                         @foreach($accounts as $account)
-                            <option value="{{ $account->id }}" data-initial-balance="{{ $account->current_balance }}">
-                                {{ $account->name }}
+                            <option value="{{ $account->id }}" data-balance="{{ $account->current_balance }}">
+                                {{ $account->name }} (S/ {{ number_format($account->current_balance, 2) }})
                             </option>
                         @endforeach
                     </select>
-
-                    <button 
-                        x-show="selectedAccountId" 
-                        @click="fetchBalance()" 
-                        class="btn-refresh"
-                        title="Actualizar saldo">
-                        <span x-show="!isLoading">🔄</span>
-                        <span x-show="isLoading">...</span>
+                    <button @click="fetchBalance()" x-show="selectedAccountId"
+                            class="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition shadow-md">
+                        Refresh
                     </button>
                 </div>
-                
-                <div x-show="selectedAccountId" style="background: #f8f9fa; padding: 10px; border-radius: 6px; display: inline-block;">
-                    <div style="font-size: 1rem; margin-bottom: 5px;">
-                        Saldo Sistema: <strong x-text="formatCurrency(systemBalance)"></strong>
-                    </div>
-                    <div style="font-size: 1.1rem;">
-                        Diferencia: 
-                        <span :class="differenceClass" x-text="formatCurrency(difference)"></span>
-                    </div>
-                    <div style="margin-top: 5px;">
-                        <small x-text="differenceText" style="color: #6c757d; font-style: italic;"></small>
+
+                <div x-show="selectedAccountId" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Saldo en Sistema</p>
+                    <p class="text-3xl font-bold text-gray-800 dark:text-gray-100">
+                        S/ <span x-text="formatCurrency(systemBalance)"></span>
+                    </p>
+                    <div class="mt-4 pt-4 border-t border-gray-300 dark:border-gray-600">
+                        <p class="text-lg font-semibold" :class="differenceClass">
+                            Diferencia: S/ <span x-text="formatCurrency(difference)"></span>
+                        </p>
+                        <p class="text-sm mt-1" :class="difference > 0 ? 'text-green-600' : difference < 0 ? 'text-red-600' : 'text-gray-500'"
+                           x-text="differenceText"></p>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="grid-money">
-            
-            <div class="card-count">
-                <div class="card-header">Monedas</div>
-                <div class="card-body">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Denominación</th>
-                                <th style="width: 100px;">Cantidad</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="(coin, index) in coins" :key="index">
-                                <tr>
-                                    <td style="text-align: center; font-weight: 600; color: #495057;">
-                                        S/ <span x-text="coin.denom.toFixed(2)"></span>
-                                    </td>
-                                    <td>
-                                        <input type="number" min="0" x-model.number="coin.qty" placeholder="0" onfocus="this.select()">
-                                    </td>
-                                    <td class="subtotal-display">
-                                        S/ <span x-text="(coin.denom * coin.qty).toFixed(2)"></span>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="section-total">
-                    Total Monedas: S/ <span x-text="formatNumber(totalCoins)"></span>
-                </div>
-            </div>
-
-            <div class="card-count">
-                <div class="card-header">Billetes</div>
-                <div class="card-body">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Denominación</th>
-                                <th style="width: 100px;">Cantidad</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="(bill, index) in bills" :key="index">
-                                <tr>
-                                    <td style="text-align: center; font-weight: 600; color: #495057;">
-                                        S/ <span x-text="bill.denom.toFixed(2)"></span>
-                                    </td>
-                                    <td>
-                                        <input type="number" min="0" x-model.number="bill.qty" placeholder="0" onfocus="this.select()">
-                                    </td>
-                                    <td class="subtotal-display">
-                                        S/ <span x-text="(bill.denom * bill.qty).toFixed(2)"></span>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="section-total">
-                    Total Billetes: S/ <span x-text="formatNumber(totalBills)"></span>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="btn-action-group">
-            <button @click="reset()" class="btn btn-reset">
-                Limpiar Todo
-            </button>
-            
-            <button @click="printReceipt()" class="btn btn-print">
-                <span>🖨️</span> Imprimir Ticket
-            </button>
-        </div>
-
     </div>
 
+    <!-- GRID DE CONTEO: MONEDAS Y BILLETES -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+
+        <!-- === MONEDAS === -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 text-center font-bold text-lg">
+                Monedas
+            </div>
+
+            <!-- VERSIÓN ESCRITORIO: Tabla -->
+            <div class="hidden lg:block">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 text-left">Denominación</th>
+                            <th class="px-6 py-4 text-center">Cantidad</th>
+                            <th class="px-6 py-4 text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <template x-for="coin in coins" :key="coin.denom">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                                <td class="px-6 py-4 font-semibold">S/ <span x-text="coin.denom.toFixed(2)"></span></td>
+                                <td class="px-6 py-4 text-center">
+                                    <input type="number" min="0" x-model.number="coin.qty"
+                                        class="w-24 px-3 py-2 text-center border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </td>
+                                <td class="px-6 py-4 text-right font-mono font-semibold">
+                                    S/ <span x-text="(coin.denom * (coin.qty || 0)).toFixed(2)"></span>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- VERSIÓN MÓVIL: Tarjetas verticales -->
+            <div class="lg:hidden space-y-3 p-4">
+                <template x-for="coin in coins" :key="coin.denom">
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="text-lg font-bold text-gray-800 dark:text-gray-200">
+                                S/ <span x-text="coin.denom.toFixed(2)"></span>
+                            </div>
+                            <div class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400">
+                                S/ <span x-text="(coin.denom * (coin.qty || 0)).toFixed(2)"></span>
+                            </div>
+                        </div>
+                        <input type="number" min="0" x-model.number="coin.qty" placeholder="Cantidad"
+                            class="w-full px-4 py-3 text-center text-lg font-semibold border-2 border-blue-200 dark:border-blue-700 rounded-xl focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                </template>
+            </div>
+
+            <!-- Total Monedas (visible en ambas versiones) -->
+            <div class="bg-green-50 dark:bg-green-900/30 px-6 py-5 border-t-4 border-green-500">
+                <div class="flex justify-between items-center">
+                    <span class="text-xl font-bold text-gray-700 dark:text-gray-300">Total Monedas</span>
+                    <span class="text-2xl font-bold text-green-700 dark:text-green-400">
+                        S/ <span x-text="formatNumber(totalCoins)"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- === BILLETES === -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 text-center font-bold text-lg">
+                Billetes
+            </div>
+
+            <!-- VERSIÓN ESCRITORIO: Tabla -->
+            <div class="hidden lg:block">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 text-left">Denominación</th>
+                            <th class="px-6 py-4 text-center">Cantidad</th>
+                            <th class="px-6 py-4 text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <template x-for="bill in bills" :key="bill.denom">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                                <td class="px-6 py-4 font-semibold">S/ <span x-text="bill.denom.toFixed(2)"></span></td>
+                                <td class="px-6 py-4 text-center">
+                                    <input type="number" min="0" x-model.number="bill.qty"
+                                        class="w-24 px-3 py-2 text-center border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                </td>
+                                <td class="px-6 py-4 text-right font-mono font-semibold">
+                                    S/ <span x-text="(bill.denom * (bill.qty || 0)).toFixed(2)"></span>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- VERSIÓN MÓVIL: Tarjetas verticales -->
+            <div class="lg:hidden space-y-3 p-4">
+                <template x-for="bill in bills" :key="bill.denom">
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="text-lg font-bold text-gray-800 dark:text-gray-200">
+                                S/ <span x-text="bill.denom.toFixed(2)"></span>
+                            </div>
+                            <div class="text-2xl font-mono font-bold text-purple-600 dark:text-purple-400">
+                                S/ <span x-text="(bill.denom * (bill.qty || 0)).toFixed(2)"></span>
+                            </div>
+                        </div>
+                        <input type="number" min="0" x-model.number="bill.qty" placeholder="Cantidad"
+                            class="w-full px-4 py-3 text-center text-lg font-semibold border-2 border-purple-200 dark:border-purple-700 rounded-xl focus:ring-4 focus:ring-purple-500 focus:border-purple-500 transition">
+                    </div>
+                </template>
+            </div>
+
+            <!-- Total Billetes -->
+            <div class="bg-purple-50 dark:bg-purple-900/30 px-6 py-5 border-t-4 border-purple-500">
+                <div class="flex justify-between items-center">
+                    <span class="text-xl font-bold text-gray-700 dark:text-gray-300">Total Billetes</span>
+                    <span class="text-2xl font-bold text-purple-700 dark:text-purple-400">
+                        S/ <span x-text="formatNumber(totalBills)"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTONES DE ACCIÓN -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button @click="reset()"
+                class="px-8 py-4 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
+            Limpiar Todo
+        </button>
+        <button @click="printReceipt()"
+                class="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-1 flex items-center gap-3">
+            Imprimir Ticket
+        </button>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
-    <script>
-        function cashCounter() {
-            return {
-                // --- DATOS ---
-                coins: [
-                    { denom: 0.10, qty: '' }, { denom: 0.20, qty: '' }, { denom: 0.50, qty: '' },
-                    { denom: 1.00, qty: '' }, { denom: 2.00, qty: '' }, { denom: 5.00, qty: '' }
-                ],
-                bills: [
-                    { denom: 10.00, qty: '' }, { denom: 20.00, qty: '' }, { denom: 50.00, qty: '' },
-                    { denom: 100.00, qty: '' }, { denom: 200.00, qty: '' }
-                ],
-                selectedAccountId: '',
-                systemBalance: 0,
-                isLoading: false,
+<script>
+function cashCounter() {
+    return {
+        coins: [
+            { denom: 0.10, qty: '' }, { denom: 0.20, qty: '' }, { denom: 0.50, qty: '' },
+            { denom: 1.00, qty: '' }, { denom: 2.00, qty: '' }, { denom: 5.00, qty: '' }
+        ],
+        bills: [
+            { denom: 10.00, qty: '' }, { denom: 20.00, qty: '' }, { denom: 50.00, qty: '' },
+            { denom: 100.00, qty: '' }, { denom: 200.00, qty: '' }
+        ],
+        selectedAccountId: '',
+        systemBalance: 0,
+        isLoading: false,
 
-                // --- GETTERS ---
-                get totalCoins() { return this.coins.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0); },
-                get totalBills() { return this.bills.reduce((sum, item) => sum + (item.denom * (item.qty || 0)), 0); },
-                get grandTotal() { return this.totalCoins + this.totalBills; },
-                
-                get difference() { return this.grandTotal - this.systemBalance; },
-                get differenceClass() {
-                    const diff = this.difference;
-                    if (Math.abs(diff) < 0.01) return 'diff-neutral';
-                    return diff > 0 ? 'diff-positive' : 'diff-negative';
-                },
-                get differenceText() {
-                    const diff = this.difference;
-                    if (Math.abs(diff) < 0.01) return '¡Cuadra perfecto!';
-                    return diff > 0 ? 'Sobra dinero' : 'Falta dinero';
-                },
+        get totalCoins() { return this.coins.reduce((s, c) => s + c.denom * (c.qty || 0), 0); },
+        get totalBills() { return this.bills.reduce((s, b) => s + b.denom * (b.qty || 0), 0); },
+        get grandTotal() { return this.totalCoins + this.totalBills; },
+        get difference() { return this.grandTotal - this.systemBalance; },
 
-                // --- FUNCIONES ---
-                async fetchBalance() {
-                    if (!this.selectedAccountId) { this.systemBalance = 0; return; }
-                    this.isLoading = true;
-                    try {
-                        const select = document.querySelector(`select[x-model="selectedAccountId"]`);
-                        const option = select.querySelector(`option[value="${this.selectedAccountId}"]`);
-                        const response = await fetch(`/cuentas/${this.selectedAccountId}/saldo`);
-                        if (response.ok) {
-                            const data = await response.json();
-                            this.systemBalance = parseFloat(data.balance);
-                        } else {
-                            if(option) this.systemBalance = parseFloat(option.getAttribute('data-initial-balance'));
-                        }
-                    } catch (error) { console.error(error); } finally { this.isLoading = false; }
-                },
-                formatNumber(value) { return value.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
-                formatCurrency(value) { return 'S/ ' + this.formatNumber(value); },
-                reset() {
-                    this.coins.forEach(c => c.qty = '');
-                    this.bills.forEach(b => b.qty = '');
-                    this.selectedAccountId = '';
-                    this.systemBalance = 0;
-                },
+        get differenceClass() {
+            if (Math.abs(this.difference) < 0.01) return 'text-gray-600';
+            return this.difference > 0 ? 'text-green-600' : 'text-red-600';
+        },
+        get differenceText() {
+            if (Math.abs(this.difference) < 0.01) return '¡Cuadra perfecto!';
+            return this.difference > 0 ? 'Sobra efectivo' : 'Falta efectivo';
+        },
 
-                // --- FUNCIÓN FINAL: IMPRIMIR TICKET CON SUBTOTALES ---
-                printReceipt() {
-                    const now = new Date();
-                    const dateStr = now.toLocaleDateString('es-PE');
-                    const timeStr = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+        async fetchBalance() {
+            if (!this.selectedAccountId) return;
+            this.isLoading = true;
+            try {
+                const option = document.querySelector(`option[value="${this.selectedAccountId}"]`);
+                const balance = option?.getAttribute('data-balance');
+                this.systemBalance = parseFloat(balance) || 0;
+            } catch (e) { console.error(e); }
+            this.isLoading = false;
+        },
 
-                    let accountName = "Sin comparar";
-                    if (this.selectedAccountId) {
-                        const select = document.querySelector(`select[x-model="selectedAccountId"]`);
-                        const option = select.options[select.selectedIndex];
-                        accountName = option.text.split('(')[0].trim();
+        formatNumber(v) { return v.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+        formatCurrency(v) { return this.formatNumber(v); },
+
+        reset() {
+            this.coins.forEach(c => c.qty = '');
+            this.bills.forEach(b => b.qty = '');
+            this.selectedAccountId = '';
+            this.systemBalance = 0;
+        },
+
+        printReceipt() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-PE');
+            const timeStr = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+            let accountName = "Sin comparar";
+            if (this.selectedAccountId) {
+                const select = document.querySelector(`select[x-model="selectedAccountId"]`);
+                const option = select.options[select.selectedIndex];
+                accountName = option.text.split('(')[0].trim();
+            }
+
+            const activeCoins = this.coins.filter(c => c.qty > 0);
+            const activeBills = this.bills.filter(b => b.qty > 0);
+
+            let html = `
+            <html>
+            <head>
+                <title>Arqueo de Caja</title>
+                <style>
+                    @page { size: 72mm auto; margin: 0; }
+                    
+                    body { 
+                        width: 71mm;
+                        margin: auto; 
+                        font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
+                        font-size: 15px; 
+                        font-weight: 700; 
+                        letter-spacing: -0.5px; 
+                        color: #000;
+                        text-transform: uppercase; 
                     }
 
-                    const activeCoins = this.coins.filter(c => c.qty > 0);
-                    const activeBills = this.bills.filter(b => b.qty > 0);
+                    .header { 
+                        text-align: center; 
+                        margin-bottom: 15px; 
+                        padding-bottom: 5px; 
+                        border-bottom: 2px dashed #000; 
+                    }
+                    
+                    h2 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 0px; }
+                    p { margin: 2px 0; }
 
-                    let html = `
-                    <html>
-                    <head>
-                        <title>Arqueo de Caja</title>
-                        <style>
-                            @page { size: 72mm auto; margin: 0; }
-                            
-                            body { 
-                                width: 71mm;
-                                margin: auto; 
-                                font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
-                                font-size: 15px; 
-                                font-weight: 700; 
-                                letter-spacing: -0.5px; 
-                                color: #000;
-                                text-transform: uppercase; 
-                            }
+                    table { 
+                        width: 100%; 
+                        border-collapse: collapse; 
+                        margin-bottom: 2px; /* Reducido para pegar el subtotal */
+                        table-layout: fixed; 
+                    }
+                    
+                    th, td {
+                        font-size: 15px; 
+                        padding: 2px 0;
+                        vertical-align: bottom;
+                    }
 
-                            .header { 
-                                text-align: center; 
-                                margin-bottom: 15px; 
-                                padding-bottom: 5px; 
-                                border-bottom: 2px dashed #000; 
-                            }
-                            
-                            h2 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 0px; }
-                            p { margin: 2px 0; }
+                    th { border-bottom: 1px solid #000; }
 
-                            table { 
-                                width: 100%; 
-                                border-collapse: collapse; 
-                                margin-bottom: 2px; /* Reducido para pegar el subtotal */
-                                table-layout: fixed; 
-                            }
-                            
-                            th, td {
-                                font-size: 15px; 
-                                padding: 2px 0;
-                                vertical-align: bottom;
-                            }
+                    /* Columnas: 40% - 20% - 40% */
+                    th:nth-child(1), td:nth-child(1) { width: 40%; text-align: left; }
+                    th:nth-child(2), td:nth-child(2) { width: 20%; text-align: center; }
+                    th:nth-child(3), td:nth-child(3) { width: 40%; text-align: right; }
 
-                            th { border-bottom: 1px solid #000; }
+                    .section-title {
+                        margin-top: 10px;
+                        margin-bottom: 2px; 
+                        text-decoration: underline;
+                        font-size: 15px;
+                    }
 
-                            /* Columnas: 40% - 20% - 40% */
-                            th:nth-child(1), td:nth-child(1) { width: 40%; text-align: left; }
-                            th:nth-child(2), td:nth-child(2) { width: 20%; text-align: center; }
-                            th:nth-child(3), td:nth-child(3) { width: 40%; text-align: right; }
+                    /* Estilo para el Subtotal de sección */
+                    .subtotal-line {
+                        text-align: right;
+                        font-size: 15px;
+                        font-style: italic;
+                        border-top: 1px dashed #000;
+                        padding-top: 2px;
+                        margin-bottom: 5px;
+                    }
 
-                            .section-title {
-                                margin-top: 10px;
-                                margin-bottom: 2px; 
-                                text-decoration: underline;
-                                font-size: 15px;
-                            }
+                    .total-line { 
+                        border-top: 2px solid #000; 
+                        font-size: 16px; 
+                        margin-top: 10px; 
+                        padding-top: 5px; 
+                        display: flex; 
+                        justify-content: space-between;
+                    }
 
-                            /* Estilo para el Subtotal de sección */
-                            .subtotal-line {
-                                text-align: right;
-                                font-size: 15px;
-                                font-style: italic;
-                                border-top: 1px dashed #000;
-                                padding-top: 2px;
-                                margin-bottom: 5px;
-                            }
+                    .diff-section { 
+                        margin-top: 15px; 
+                        border: 1px solid #000; 
+                        padding: 5px;
+                        text-align: center;
+                    }
+                    
+                    .footer { text-align: center; margin-top: 20px; font-size: 10px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>ARQUEO DE CAJA</h2>
+                    <p>${dateStr} ${timeStr}</p>
+                    <p style="font-size: 13px;">CUENTA: ${accountName}</p>
+                </div>
 
-                            .total-line { 
-                                border-top: 2px solid #000; 
-                                font-size: 16px; 
-                                margin-top: 10px; 
-                                padding-top: 5px; 
-                                display: flex; 
-                                justify-content: space-between;
-                            }
+                ${activeCoins.length > 0 ? `
+                    <div class="section-title">MONEDAS</div>
+                    <table>
+                        <thead><tr><th>DENOM.</th><th>CANT.</th><th>TOTAL</th></tr></thead>
+                        <tbody>
+                            ${activeCoins.map(c => `
+                                <tr>
+                                    <td>${c.denom.toFixed(2)}</td>
+                                    <td>${c.qty}</td>
+                                    <td>${(c.denom * c.qty).toFixed(2)}</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    <div class="subtotal-line">
+                        SUB. MONEDAS: S/ ${this.formatNumber(this.totalCoins)}
+                    </div>
+                ` : ''}
 
-                            .diff-section { 
-                                margin-top: 15px; 
-                                border: 1px solid #000; 
-                                padding: 5px;
-                                text-align: center;
-                            }
-                            
-                            .footer { text-align: center; margin-top: 20px; font-size: 10px; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h2>ARQUEO DE CAJA</h2>
-                            <p>${dateStr} ${timeStr}</p>
-                            <p style="font-size: 13px;">CUENTA: ${accountName}</p>
+                ${activeBills.length > 0 ? `
+                    <div class="section-title">BILLETES</div>
+                    <table>
+                        <thead><tr><th>DENOM.</th><th>CANT.</th><th>TOTAL</th></tr></thead>
+                        <tbody>
+                            ${activeBills.map(b => `
+                                <tr>
+                                    <td>${b.denom.toFixed(2)}</td>
+                                    <td>${b.qty}</td>
+                                    <td>${(b.denom * b.qty).toFixed(2)}</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    <div class="subtotal-line">
+                        SUB. BILLETES: S/ ${this.formatNumber(this.totalBills)}
+                    </div>
+                ` : ''}
+
+                <div class="total-line">
+                    <span>TOTAL EFECTIVO:</span>
+                    <span>S/ ${this.formatNumber(this.grandTotal)}</span>
+                </div>
+
+                <div class="diff-section">
+                    ${this.selectedAccountId ? `
+                        <p style="margin:0; font-size: 14px;">SISTEMA: S/ ${this.formatNumber(this.systemBalance)}</p>
+                        <div style="font-size: 16px; margin-top: 4px;">
+                            DIF: S/ ${this.formatNumber(this.difference)}
                         </div>
+                        <p style="margin:0; font-size: 12px;">(${this.differenceText.toUpperCase()})</p>
+                    ` : '<p style="margin:0;">SIN COMPARACIÓN</p>'}
+                </div>
 
-                        ${activeCoins.length > 0 ? `
-                            <div class="section-title">MONEDAS</div>
-                            <table>
-                                <thead><tr><th>DENOM.</th><th>CANT.</th><th>TOTAL</th></tr></thead>
-                                <tbody>
-                                    ${activeCoins.map(c => `
-                                        <tr>
-                                            <td>${c.denom.toFixed(2)}</td>
-                                            <td>${c.qty}</td>
-                                            <td>${(c.denom * c.qty).toFixed(2)}</td>
-                                        </tr>`).join('')}
-                                </tbody>
-                            </table>
-                            <div class="subtotal-line">
-                                SUB. MONEDAS: S/ ${this.formatNumber(this.totalCoins)}
-                            </div>
-                        ` : ''}
+                <div class="footer">.</div>
+            </body>
+            </html>
+            `;
 
-                        ${activeBills.length > 0 ? `
-                            <div class="section-title">BILLETES</div>
-                            <table>
-                                <thead><tr><th>DENOM.</th><th>CANT.</th><th>TOTAL</th></tr></thead>
-                                <tbody>
-                                    ${activeBills.map(b => `
-                                        <tr>
-                                            <td>${b.denom.toFixed(2)}</td>
-                                            <td>${b.qty}</td>
-                                            <td>${(b.denom * b.qty).toFixed(2)}</td>
-                                        </tr>`).join('')}
-                                </tbody>
-                            </table>
-                            <div class="subtotal-line">
-                                SUB. BILLETES: S/ ${this.formatNumber(this.totalBills)}
-                            </div>
-                        ` : ''}
-
-                        <div class="total-line">
-                            <span>TOTAL EFECTIVO:</span>
-                            <span>S/ ${this.formatNumber(this.grandTotal)}</span>
-                        </div>
-
-                        <div class="diff-section">
-                            ${this.selectedAccountId ? `
-                                <p style="margin:0; font-size: 14px;">SISTEMA: S/ ${this.formatNumber(this.systemBalance)}</p>
-                                <div style="font-size: 16px; margin-top: 4px;">
-                                    DIF: S/ ${this.formatNumber(this.difference)}
-                                </div>
-                                <p style="margin:0; font-size: 12px;">(${this.differenceText.toUpperCase()})</p>
-                            ` : '<p style="margin:0;">SIN COMPARACIÓN</p>'}
-                        </div>
-
-                        <div class="footer">.</div>
-                    </body>
-                    </html>
-                    `;
-
-                    const printWindow = window.open('', '', 'height=600,width=400');
-                    printWindow.document.write(html);
-                    printWindow.document.close();
-                    printWindow.focus();
-                    setTimeout(() => { printWindow.print(); }, 250);
-                }
-            }
+            const printWindow = window.open('', '', 'height=600,width=400');
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); }, 250);
         }
-    </script>
+    }
+}
+</script>
 @endpush

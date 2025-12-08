@@ -1,5 +1,5 @@
 {{-- resources/views/layouts/partials/sidebar.blade.php --}}
-<aside class="fixed inset-y-0 left-0 w-72 bg-gray-900 text-gray-200 dark:bg-gray-800 transform transition-transform duration-300 ease-in-out z-50 flex flex-col
+<aside class="print:hidden fixed inset-y-0 left-0 w-72 bg-gray-900 text-gray-200 dark:bg-gray-800 transform transition-transform duration-300 ease-in-out z-50 overflow-hidden flex flex-col
                lg:translate-x-0 lg:static lg:inset-auto"
        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
 

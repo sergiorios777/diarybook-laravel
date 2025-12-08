@@ -1,48 +1,42 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Editar Cuenta</title>
-    <style>
-        /* (Tus estilos de formulario) */
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; }
-        .navbar { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .navbar a { text-decoration: none; color: #333; font-weight: bold; margin: 0 10px; }
-        .container { max-width: 600px; margin: 20px auto; padding: 20px; }
+@extends('layouts.app1')
+@section('title', 'Editar Cuenta')
 
-        form { max-width: 500px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        div { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <a href="{{ route('dashboard') }}"><strong>Mi Dashboard</strong></a>
-        <div>
-            <a href="{{ route('cuentas.index') }}">Volver</a>
+@section('content')
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Editar Cuenta</h1>
+            <a href="{{ route('cuentas.index') }}"
+               class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
+                ← Volver
+            </a>
         </div>
-    </nav>
-    <div class="container">
-        <h1>Editar Cuenta: {{ $account->name }}</h1>
 
-        <form action="{{ route('cuentas.update', $account) }}" method="POST">
-            @csrf
-            @method('PUT')
+        <form action="{{ route('cuentas.update', $account) }}" method="POST" class="space-y-8">
+            @csrf @method('PUT')
+
             <div>
-                <label for="name">Nombre de la Cuenta:</label>
-                <input type="text" id="name" name="name" value="{{ old('name', $account->name) }}" required>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Nombre de la Cuenta</label>
+                <input type="text" name="name" value="{{ old('name', $account->name) }}" required
+                       class="w-full px-5 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500 transition text-lg">
             </div>
+
             <div>
-                <label for="initial_balance">Saldo Inicial:</label>
-                <input type="number" id="initial_balance" name="initial_balance" step="0.01" min="0" value="{{ old('initial_balance', $account->initial_balance) }}" required>
-                <small>Nota: Cambiar esto afectará el cálculo del saldo actual.</small>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Saldo Inicial</label>
+                <input type="number" name="initial_balance" step="0.01" min="0" value="{{ old('initial_balance', $account->initial_balance) }}" required
+                       class="w-full px-5 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500 transition text-lg font-mono">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    Cambiar esto afectará el saldo actual calculado
+                </p>
             </div>
-            <div>
-                <button type="submit">Actualizar Cuenta</button>
+
+            <div class="pt-6">
+                <button type="submit"
+                        class="w-full py-5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xl rounded-xl shadow-xl transition transform hover:-translate-y-1">
+                    Actualizar Cuenta
+                </button>
             </div>
         </form>
     </div>
-</body>
-</html>
+</div>
+@endsection

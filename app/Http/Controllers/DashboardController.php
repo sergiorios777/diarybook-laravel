@@ -34,7 +34,7 @@ class DashboardController extends Controller
         $total_general = $accounts->sum('current_balance');
 
         // === NUEVO: Datos para el gráfico (últimos 6 meses) ===
-        $months = collect(range(5, 0))->map(fn($i) => now()->subMonths($i))->reverse();
+        $months = collect(range(0, 5))->map(fn($i) => now()->subMonths($i))->reverse();
 
         $chartData = $months->map(function ($date) {
             return [

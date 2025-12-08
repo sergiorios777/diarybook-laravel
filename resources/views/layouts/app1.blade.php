@@ -19,7 +19,7 @@
 
     <div class="flex-1 flex flex-col min-h-screen"> <!-- ← min-h-screen aquí -->
         <!-- Header fijo -->
-        <header class="h-16 bg-white dark:bg-gray-800 shadow flex items-center px-4 justify-between z-40">
+        <header class="h-16 bg-white dark:bg-gray-800 shadow flex items-center px-4 justify-between z-40 print:hidden">
             <button class="lg:hidden text-gray-700 dark:text-gray-300 text-2xl" @click="sidebarOpen = true">
                 Menu
             </button>
