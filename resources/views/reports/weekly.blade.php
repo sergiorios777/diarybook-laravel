@@ -33,7 +33,8 @@
         }
 
         /* 4. Ocultar elementos de interfaz */
-        .no-print, nav, header, aside, footer, .shadow-sm, .shadow-lg, button, form { 
+        /* , nav, header, aside, footer, .shadow-sm, .shadow-lg, button, form */
+        .no-print { 
             display: none !important; 
         }
 
