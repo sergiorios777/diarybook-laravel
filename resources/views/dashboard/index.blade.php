@@ -33,6 +33,41 @@
         </div>
     </div>
 
+    {{-- ====== SALDOS POR CUENTA ====== --}}
+    <div>
+        <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Saldos por Cuenta</h3>
+        <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            @foreach($accounts as $account)
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 hover:shadow-xl transition transform hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                            {{ $account->name }}
+                        </h4>
+                        <span class="text-4xl opacity-40">
+                            @if(strtolower($account->name) == 'efectivo')
+                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                            @elseif(str_contains(strtolower($account->name), 'banco'))
+                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h-4m-6 0H5a2 2 0 002-2v-4a2 2 0 012-2h6a2 2 0 012 2v4a2 2 0 002 2zm-10-8h.01M9 16h.01"/>
+                                </svg>
+                            @else
+                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                                </svg>
+                            @endif
+                        </span>
+                    </div>
+
+                    <div class="text-3xl font-bold {{ $account->current_balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                        ${{ number_format($account->current_balance, 2) }}
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
     {{-- ====== GRÁFICO DE EVOLUCIÓN MENSUAL (Últimos 6 meses) ====== --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
@@ -106,38 +141,17 @@
         </div>
     </div>
 
-    {{-- ====== SALDOS POR CUENTA ====== --}}
-    <div>
-        <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Saldos por Cuenta</h3>
-        <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            @foreach($accounts as $account)
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 hover:shadow-xl transition transform hover:-translate-y-1">
-                    <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                            {{ $account->name }}
-                        </h4>
-                        <span class="text-4xl opacity-40">
-                            @if(strtolower($account->name) == 'efectivo')
-                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                            @elseif(str_contains(strtolower($account->name), 'banco'))
-                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h-4m-6 0H5a2 2 0 002-2v-4a2 2 0 012-2h6a2 2 0 012 2v4a2 2 0 002 2zm-10-8h.01M9 16h.01"/>
-                                </svg>
-                            @else
-                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                                </svg>
-                            @endif
-                        </span>
-                    </div>
-
-                    <div class="text-3xl font-bold {{ $account->current_balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                        ${{ number_format($account->current_balance, 2) }}
-                    </div>
-                </div>
-            @endforeach
+    {{-- ====== NUEVO: GRÁFICO DE EVOLUCIÓN DIARIA (12 DÍAS) ====== --}}
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">
+                Flujo de Caja (Últimos 12 Días)
+            </h3>
+            <span class="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded-lg dark:bg-blue-900 dark:text-blue-200">
+                Diario
+            </span>
+        </div>
+        <div class="h-72"> <canvas id="dailyChart"></canvas>
         </div>
     </div>
 
@@ -239,6 +253,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    // ====== CONFIGURACIÓN GRÁFICO MENSUAL ======
     const ctx = document.getElementById('monthlyChart').getContext('2d');
 
     new Chart(ctx, {
@@ -306,6 +322,79 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+    // ==========================================
+
+    // ====== CONFIGURACIÓN GRÁFICO DIARIO ======
+    const ctxDaily = document.getElementById('dailyChart').getContext('2d');
+
+    new Chart(ctxDaily, {
+        type: 'bar', // 'bar' es mejor para ver comparativas diarias, pero puedes usar 'line'
+        data: {
+            labels: @json($dailyLabels),
+            datasets: [
+                {
+                    label: 'Ingresos',
+                    data: @json($dailyIngresos),
+                    backgroundColor: '#10b981', // Verde sólido para barras
+                    borderRadius: 4, // Bordes redondeados en las barras
+                    barPercentage: 0.6,
+                },
+                {
+                    label: 'Gastos',
+                    data: @json($dailyGastos),
+                    backgroundColor: '#ef4444', // Rojo sólido para barras
+                    borderRadius: 4,
+                    barPercentage: 0.6,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { font: { size: 12 } }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            label += '$' + context.parsed.y.toLocaleString('es-PE', { minimumFractionDigits: 2 });
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString(); // Formato moneda eje Y
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)' // Líneas guías sutiles
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false // Ocultar líneas verticales para limpieza visual
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+    // ==========================================
 });
 </script>
 @endpush

@@ -57,12 +57,40 @@ class DashboardController extends Controller
         $chartGastos = $chartData->pluck('gastos')->toArray();
         // === FIN NUEVO ===
 
+        // ============================================================
+        // === NUEVO: Datos para el gráfico DIARIO (Últimos 12 días) ===
+        // ============================================================
+        
+        // 1. Generamos los últimos 12 días
+        $last12Days = collect(range(0, 11))->map(fn($i) => now()->subDays($i))->reverse();
+
+        // 2. Mapeamos los datos día por día
+        $dailyChartData = $last12Days->map(function ($date) {
+            return [
+                'label' => $date->format('d/m'), // Ej: "09/12"
+                'ingresos' => \App\Models\Transaction::where('type', 'ingreso')
+                    ->whereDate('date', $date->format('Y-m-d')) // Filtrar por fecha exacta
+                    ->excludeInternalTransfers() 
+                    ->sum('amount'),
+                'gastos' => \App\Models\Transaction::where('type', 'gasto')
+                    ->whereDate('date', $date->format('Y-m-d')) // Filtrar por fecha exacta
+                    ->excludeInternalTransfers()
+                    ->sum('amount'),
+            ];
+        });
+
+        // 3. Separamos en arrays para Chart.js
+        $dailyLabels = $dailyChartData->pluck('label')->toArray();
+        $dailyIngresos = $dailyChartData->pluck('ingresos')->toArray();
+        $dailyGastos = $dailyChartData->pluck('gastos')->toArray();
+
+        // ============================================================
+
         // 3. Pasamos los datos a la nueva vista del dashboard.
         return view('dashboard.index', compact(
             'accounts', 'total_general',
-            'chartLabels',     // ← AÑADIR ESTA
-            'chartIngresos',   // ← AÑADIR ESTA
-            'chartGastos'      // ← AÑADIR ESTA
+            'chartLabels', 'chartIngresos','chartGastos',
+            'dailyLabels', 'dailyIngresos', 'dailyGastos',
             ));
     }
 }

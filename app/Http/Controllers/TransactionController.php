@@ -17,8 +17,16 @@ class TransactionController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        // 1. Configuración de los filtros
+        // Por defecto: HOY.
+        $dateFrom = $request->input('date_from', now()->toDateString());
+        $dateTo   = $request->input('date_to', now()->toDateString());
+
+        $accountId = $request->input('account_id');
+        $categoryId = $request->input('category_id');
+
         // 1. Obtenemos las transacciones.
         // 2. Usamos latest() para ordenarlas, de la más nueva a la más antigua.
         // 3. ¡MUY IMPORTANTE! Usamos with(['account', 'category'])
@@ -27,14 +35,52 @@ class TransactionController extends Controller
         //    consulta, evitando el "problema N+1" y haciendo la app muy rápida.
         // 1. Primero por Fecha descendente (lo más reciente arriba)
         // 2. Luego por Hora descendente (para movimientos del mismo día)
-        $transactions = Transaction::with(['account', 'category'])
-                                 ->orderBy('date', 'desc')
-                                 ->orderBy('time', 'desc')
-                                 ->paginate(15);
+        $query = Transaction::with(['account', 'category'])
+                                ->whereDate('date', '>=', $dateFrom)
+                                ->whereDate('date', '<=', $dateTo);
 
-        // 4. Retornamos la nueva vista (que crearemos a continuación)
-        //    y le pasamos la variable $transactions.
-        return view('transactions.index', compact('transactions'));
+        if ($accountId) {
+            $query->where('account_id', $accountId);
+        }
+
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
+        // 3. Ordenamos primero por fecha y luego por hora
+        $query->orderBy('date', 'desc')->orderBy('time', 'desc');
+
+        // Calculamos los totales de lo filtrado
+        // clonamos la consulta antes de paginar para no afectar los resultados
+        $resumenQuery = clone $query;
+        $totalIngresos = $resumenQuery->where('type', 'ingreso')->sum('amount');
+
+        // reiniciar el clon para evitar conflictos
+        $resumenQuery = clone $query;
+        $totalGastos   = $resumenQuery->where('type', 'gasto')->sum('amount');
+        
+        $balanceFiltrado       = $totalIngresos - $totalGastos;
+
+        // 4. Paginamos los resultados (añadimos los filtros a la URL de paginación)
+        $transactions = $query->paginate(15)->appends($request->all());
+
+        // 5. Cargar listas para los filtros
+        $accounts = Account::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
+        
+        // 6. Retornamos la nueva vista (que crearemos a continuación)
+        //    y le pasamos las variables $transactions, $accounts y $categories; y todas las demás variables de filtro y totales.
+        return view('transactions.index', compact(
+            'transactions', 
+            'accounts', 
+            'categories', 
+            'dateFrom', 
+            'dateTo', 
+            'accountId', 
+            'categoryId', 
+            'totalIngresos', 
+            'totalGastos', 
+            'balanceFiltrado'));
     }
     
     /**
