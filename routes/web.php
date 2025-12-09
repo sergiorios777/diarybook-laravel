@@ -10,6 +10,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\WeeklyReportController;
 use App\Http\Controllers\MonthlyReportController;
+use App\Http\Controllers\PdfController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -33,6 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/informes/mensual', [MonthlyReportController::class, 'index'])->name('reports.monthly');
     // Ruta para el informe detallado
     Route::get('/informes/detallado', [ReportController::class, 'detailed'])->name('reports.detailed');
+    // Ruta para generar PDFs
+    Route::post('/informes/pdf', [PdfController::class, 'generate'])->name('reports.pdf');
 
     // --- RUTAS DE GESTIÓN (CRUD) ---
     Route::resource('categorias', CategoryController::class)->parameters(['categorias' => 'category']);

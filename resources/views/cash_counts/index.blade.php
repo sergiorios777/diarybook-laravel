@@ -32,17 +32,27 @@
 
                 <div class="flex items-center justify-center gap-3 mb-4">
                     <select x-model="selectedAccountId" @change="fetchBalance()"
-                            class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                        <option value="">-- Seleccionar Cuenta --</option>
+                            class="..."> <option value="">-- Seleccionar Cuenta --</option>
+                        
                         @foreach($accounts as $account)
-                            <option value="{{ $account->id }}" data-balance="{{ $account->current_balance }}">
+                            <option value="{{ $account->id }}" 
+                                    data-name="{{ $account->name }}"
+                                    data-balance="{{ $account->current_balance }}">
                                 {{ $account->name }} (S/ {{ number_format($account->current_balance, 2) }})
                             </option>
                         @endforeach
+
                     </select>
                     <button @click="fetchBalance()" x-show="selectedAccountId"
-                            class="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition shadow-md">
-                        Refresh
+                            :disabled="isLoading" 
+                            class="p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl transition shadow-md flex items-center gap-2">
+                        
+                        <svg x-show="isLoading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        
+                        <span x-text="isLoading ? 'Actualizando...' : 'Refresh'"></span>
                     </button>
                 </div>
 
@@ -237,13 +247,50 @@ function cashCounter() {
 
         async fetchBalance() {
             if (!this.selectedAccountId) return;
+            
             this.isLoading = true;
+
             try {
-                const option = document.querySelector(`option[value="${this.selectedAccountId}"]`);
-                const balance = option?.getAttribute('data-balance');
-                this.systemBalance = parseFloat(balance) || 0;
-            } catch (e) { console.error(e); }
-            this.isLoading = false;
+                const url = `/cuentas/${this.selectedAccountId}/saldo`;
+                const response = await fetch(url);
+
+                if (!response.ok) throw new Error('Error al conectar');
+
+                const data = await response.json();
+
+                // 1. Actualizamos el saldo principal (lo que ya tenías)
+                this.systemBalance = parseFloat(data.balance) || 0;
+
+                // --- NUEVO: Actualizar el texto visual del SELECT ---
+                
+                // a. Buscamos la opción seleccionada en el DOM
+                //    Usamos una selección específica para encontrar el option dentro del select correcto
+                const selectElement = document.querySelector('select[x-model="selectedAccountId"]');
+                const selectedOption = selectElement.querySelector(`option[value="${this.selectedAccountId}"]`);
+
+                if (selectedOption) {
+                    // b. Obtenemos el nombre original que guardamos en el Paso 1
+                    const accountName = selectedOption.getAttribute('data-name');
+                    
+                    // c. Formateamos el nuevo saldo (reutilizamos tu función formatNumber)
+                    const newFormattedBalance = this.formatNumber(this.systemBalance);
+
+                    // d. Reescribimos el texto visible de la opción
+                    selectedOption.innerText = `${accountName} (S/ ${newFormattedBalance})`;
+
+                    // e. (Opcional) Actualizamos también el data-balance para mantener consistencia
+                    selectedOption.setAttribute('data-balance', this.systemBalance);
+                }
+                // ----------------------------------------------------
+
+                console.log(`Saldo actualizado visualmente para: ${this.selectedAccountId}`);
+
+            } catch (e) { 
+                console.error(e);
+                alert('No se pudo actualizar el saldo.');
+            } finally {
+                this.isLoading = false;
+            }
         },
 
         formatNumber(v) { return v.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },

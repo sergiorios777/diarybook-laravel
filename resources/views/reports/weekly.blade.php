@@ -30,10 +30,34 @@
                 </button>
             </form>
 
-            <button onclick="window.print()"
-                    class="px-6 py-2 bg-gray-700 hover:bg-gray-900 text-white rounded-lg font-medium transition flex items-center gap-2">
-                Imprimir Reporte
-            </button>
+            <div class="flex items-center gap-4">
+                <!-- Botón Descargar PDF (pégalo donde quieras) -->
+                <form method="POST" action="{{ route('reports.pdf') }}" class="inline">
+                    @csrf
+                    
+                    <input type="hidden" name="view" value="reports.pdf.weekly_pdf"> 
+
+                    <input type="hidden" name="data" value="{{ base64_encode(serialize(compact(
+                                                                'balanceStartOfWeek',
+                                                                'days',
+                                                                'matrix',
+                                                                'startOfWeek',
+                                                                'endOfWeek'
+                                                            ))) }}">
+                    
+                    <button type="submit" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Descargar PDF
+                    </button>
+                </form>
+
+                <button onclick="window.print()"
+                        class="px-6 py-2 bg-gray-700 hover:bg-gray-900 text-white rounded-lg font-medium transition flex items-center gap-2">
+                    Imprimir Reporte
+                </button>
+            </div>
         </div>
     </div>
 
