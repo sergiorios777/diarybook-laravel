@@ -223,8 +223,17 @@ class TransactionController extends Controller
             (new \App\Services\CategoryAssignmentEngine())->learnFromTransaction($transaction);
         }
 
+        // === RECUPERAR FILTROS SIN COLISIÓN ===
+        $filtros = [];
+
+        // Mapeamos manualmente los "keep_" a sus nombres originales
+        if ($request->filled('keep_date_from'))  $filtros['date_from']   = $request->input('keep_date_from');
+        if ($request->filled('keep_date_to'))    $filtros['date_to']     = $request->input('keep_date_to');
+        if ($request->filled('keep_account_id')) $filtros['account_id']  = $request->input('keep_account_id');
+        if ($request->filled('keep_category_id')) $filtros['category_id'] = $request->input('keep_category_id');
+
         return redirect()
-            ->route('transactions.index') // Generalmente al editar volvemos al listado
+            ->route('transactions.index', $filtros) // Volvemos al listado y enviamos los valores de los filtros
             ->with('success', '¡Transacción actualizada correctamente!');
     }
 
