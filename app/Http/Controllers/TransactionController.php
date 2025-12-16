@@ -53,11 +53,11 @@ class TransactionController extends Controller
         // Calculamos los totales de lo filtrado
         // clonamos la consulta antes de paginar para no afectar los resultados
         $resumenQuery = clone $query;
-        $totalIngresos = $resumenQuery->where('type', 'ingreso')->sum('amount');
+        $totalIngresos = $resumenQuery->where('type', 'ingreso')->excludeInternalTransfers()->sum('amount');
 
         // reiniciar el clon para evitar conflictos
         $resumenQuery = clone $query;
-        $totalGastos   = $resumenQuery->where('type', 'gasto')->sum('amount');
+        $totalGastos   = $resumenQuery->where('type', 'gasto')->excludeInternalTransfers()->sum('amount');
         
         $balanceFiltrado       = $totalIngresos - $totalGastos;
 
