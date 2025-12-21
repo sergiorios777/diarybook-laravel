@@ -11,7 +11,8 @@
             Editar Transacción #{{ $transaction->id }}
         </h1>
         <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('transactions.index') }}" 
-           class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 font-medium">
+           class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 font-medium"
+           id="volver-historial">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
@@ -146,7 +147,7 @@
 
             <!-- Botón Actualizar -->
             <div class="pt-6">
-                <button type="submit"
+                <button id="btn-actualizar" type="submit"
                         class="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-4 px-6 rounded-lg text-lg transition duration-200 shadow-md hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -230,4 +231,52 @@ document.addEventListener('DOMContentLoaded', function () {
     suggest();
 });
 </script>
+
+{{-- Script de Navegación por Teclado (Flechas + Botón) --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Asignar ID al botón de submit para identificarlo en el mapa
+    const submitBtn = document.querySelector('button[id="btn-actualizar"]'); //button[type="submit"]
+    // const linkReturn = document.querySelectorById("volver-historial")
+    if(submitBtn) submitBtn.id = 'submit-btn';
+
+    // 2. Mapa de navegación actualizado
+    const navMap = {
+        'date':        { 'ArrowRight': 'time', 'ArrowDown': 'description', 'ArrowUp': 'volver-historial' },
+        'time':        { 'ArrowLeft': 'date', 'ArrowDown': 'description', 'ArrowUp': 'volver-historial' },
+        'description': { 'ArrowUp': 'date', 'ArrowDown': 'amount' },
+        
+        'amount':      { 'ArrowUp': 'description', 'ArrowRight': 'account_id', 'ArrowDown': 'category_id' },
+        'account_id':  { 'ArrowUp': 'description', 'ArrowLeft': 'amount', 'ArrowDown': 'type' },
+        
+        'category_id': { 'ArrowUp': 'amount', 'ArrowRight': 'type', 'ArrowDown': 'submit-btn' },
+        'type':        { 'ArrowUp': 'account_id', 'ArrowLeft': 'category_id', 'ArrowDown': 'submit-btn' },
+        
+        // Configuración del botón:
+        'submit-btn':  { 'ArrowUp': 'category_id', 'ArrowLeft': 'category_id', 'ArrowRight': 'type' }, 
+        'volver-historial':  { 'ArrowDown': 'time' }
+    };
+
+    document.addEventListener('keydown', function(e) {
+        // Usar Ctrl + Flechas (puedes cambiar a e.altKey si prefieres)
+        if (!e.ctrlKey) return; 
+
+        if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+
+        const currentId = document.activeElement.id;
+        
+        if (currentId && navMap[currentId] && navMap[currentId][e.key]) {
+            e.preventDefault();
+            const targetId = navMap[currentId][e.key];
+            const targetElement = document.getElementById(targetId);
+            
+            if (targetElement) {
+                targetElement.focus();
+                if (targetElement.tagName === 'INPUT') targetElement.select();
+            }
+        }
+    });
+});
+</script>
+
 @endpush
