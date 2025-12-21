@@ -203,6 +203,15 @@
 
     <!-- BOTONES DE ACCIÓN -->
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button @click="saveCount()"
+                :disabled="isSaving"
+                class="px-8 py-4 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-1 flex items-center gap-3">
+            
+            <svg x-show="!isSaving" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+            <svg x-show="isSaving" class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            
+            <span x-text="isSaving ? 'Guardando...' : 'Guardar Arqueo'"></span>
+        </button>
         <button @click="reset()"
                 class="px-8 py-4 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
             Limpiar Todo
@@ -230,6 +239,7 @@ function cashCounter() {
         selectedAccountId: '',
         systemBalance: 0,
         isLoading: false,
+        isSaving: false,
 
         get totalCoins() { return this.coins.reduce((s, c) => s + c.denom * (c.qty || 0), 0); },
         get totalBills() { return this.bills.reduce((s, b) => s + b.denom * (b.qty || 0), 0); },
@@ -295,6 +305,63 @@ function cashCounter() {
 
         formatNumber(v) { return v.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
         formatCurrency(v) { return this.formatNumber(v); },
+
+        async saveCount() {
+            if (this.grandTotal <= 0 && !confirm("El total es 0. ¿Deseas guardar un arqueo vacío?")) {
+                return;
+            }
+
+            if (!this.selectedAccountId && !confirm("No has seleccionado una cuenta del sistema para comparar. ¿Guardar solo el conteo físico?")) {
+                return;
+            }
+
+            this.isSaving = true;
+
+            // Preparamos los datos
+            const payload = {
+                account_id: this.selectedAccountId || null,
+                total_counted: this.grandTotal,
+                system_balance: this.systemBalance,
+                difference: this.difference,
+                details: {
+                    coins: this.coins.filter(c => c.qty > 0), // Solo enviamos lo que tiene cantidad
+                    bills: this.bills.filter(b => b.qty > 0)
+                }
+            };
+
+            try {
+                const response = await fetch("{{ route('cash_counts.store') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    // Intentamos leer la respuesta para ver qué dijo el servidor
+                    const errorBody = await response.text(); 
+                    console.error("Error del servidor:", errorBody); // <--- Aquí verás el error de Laravel en la consola
+                    throw new Error('Error en el servidor: ' + response.status);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('¡Arqueo guardado con éxito!');
+                    this.reset(); // Limpiamos la pantalla
+                } else {
+                    alert('Error: ' + result.message);
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert('Ocurrió un error al intentar guardar.');
+            } finally {
+                this.isSaving = false;
+            }
+        },
 
         reset() {
             this.coins.forEach(c => c.qty = '');
