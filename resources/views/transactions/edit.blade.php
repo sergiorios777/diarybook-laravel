@@ -10,7 +10,7 @@
         <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
             Editar Transacción #{{ $transaction->id }}
         </h1>
-        <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('transactions.index') }}
+        <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('transactions.index') }}" 
            class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 font-medium">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
