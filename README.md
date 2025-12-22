@@ -18,12 +18,14 @@
 - **Motor de Asignación Automática:** El sistema sugiere automáticamente la categoría basándose en la descripción ingresada (usando palabras clave, expresiones regulares y lógica de montos positivos/negativos).
 - Registro rápido con atajos de teclado y enfoque automático.
 - Historial completo con filtros por fecha, cuenta y categoría.
+- Se puede importar registros de ventas desde el reporte del facturado, utilizando archivo csv con orden de columnas.
 
 ### 🧮 Arqueo de Caja (Cash Count)
 - Herramienta integrada para el conteo físico de dinero.
 - Calculadora de billetes y monedas en tiempo real.
 - **Comparación en vivo:** Conecta con el saldo del sistema mediante AJAX para mostrar diferencias (sobrantes/faltantes) sin recargar la página.
 - Impresión de tickets de arqueo.
+- Consultas de arqueos guardados.
 
 ### 📈 Reportes Profesionales
 - **Reporte Semanal:** Vista matricial de ingresos y gastos por día.
