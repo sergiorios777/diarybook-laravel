@@ -250,4 +250,117 @@ class TransactionController extends Controller
                          ->with('success', '¡Transacción eliminada correctamente!');
     }
 
+    /**
+     * Muestra el formulario para importar transacciones desde CSV.
+     */
+    public function showImportForm(): View
+    {
+        return view('transactions.import');
+    }
+
+    /**
+     * Procesa el archivo CSV cargado.
+     */
+    public function processImport(Request $request): RedirectResponse
+    {
+        // 1. Validar que se subió un archivo
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:2048', // Máx 2MB
+        ]);
+
+        $path = $request->file('file')->getRealPath();
+        $data = array_map('str_getcsv', file($path));
+        
+        // Eliminamos la primera fila (Cabeceras)
+        // SI tu archivo NO tiene cabeceras, comenta esta línea.
+        array_shift($data);
+
+        $count = 0;
+        $ignoredCategory = 0;
+        $ignoredVoid = 0;
+
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            foreach ($data as $row) {
+                // Estructura esperada del CSV por columnas (índices del array):
+                // 0: Fecha (YYYY-MM-DD), 1: Hora (HH:MM), 2: Descripción, 
+                // 3: Monto, 4: Account_ID, 5: Category_ID
+
+                // Validación básica de estructura de fila (mínimo 6 columnas)
+                if (count($row) < 6) continue;
+
+                // --- NUEVA LÓGICA: FILTRO DE ANULADOS ---
+                // Verificamos si existe la columna 6 y si su contenido es "ANULADO"
+                if (isset($row[6])) {
+                    $estado = strtoupper(trim($row[6])); // Convertimos a mayúsculas para evitar errores
+                    if ($estado === 'ANULADO') {
+                        $ignoredVoid++;
+                        continue; // Saltamos al siguiente registro sin guardar nada
+                    }
+                }
+                // ----------------------------------------------------
+
+                $categoryId = trim($row[5]);
+                
+                // REGLA DE NEGOCIO: Solo aceptamos Categoría ID 6 (Ventas)
+                if ($categoryId != 6) {
+                    $ignoredCategory++;
+                    continue; // Saltamos esta fila
+                }
+
+                // --- CORRECCIÓN DE FECHA (NUEVO) ---
+                $dateRaw = trim($row[0]);
+                $finalDate = $dateRaw;
+
+                // Si la fecha viene con barras (ej: 19/12/2025), la convertimos
+                if (str_contains($dateRaw, '/')) {
+                    try {
+                        // Creamos un objeto fecha desde el formato Día/Mes/Año
+                        $dateObj = \Carbon\Carbon::createFromFormat('d/m/Y', $dateRaw);
+                        // Lo transformamos al formato que le gusta a MySQL: Año-Mes-Día
+                        $finalDate = $dateObj->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        // Si falla la conversión, dejamos el dato original para que salte el error
+                        // o podrías poner 'continue' para saltar la fila errónea.
+                    }
+                }
+                // -----------------------------------------------
+
+                // Limpieza de datos
+                $amount = abs((float) str_replace(',', '', $row[3])); // Convertir a positivo y limpiar comas
+                $accountId = trim($row[4]);
+
+                // Crear Transacción
+                Transaction::create([
+                    'date'        => $finalDate,
+                    'time'        => trim($row[1]) ?: '00:00', // Hora por defecto si está vacía
+                    'description' => trim($row[2]),
+                    'amount'      => $amount,
+                    'account_id'  => $accountId,
+                    'category_id' => 6,        // Forzamos ID 6
+                    'type'        => 'ingreso' // Forzamos 'ingreso' porque es Venta
+                ]);
+
+                $count++;
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            $message = "Se importaron $count ventas exitosamente.";
+            if ($ignoredVoid > 0) {
+                $message .= " Se omitieron $ignoredVoid filas marcadas como ANULADO.";
+            }
+            if ($ignoredCategory > 0) {
+                $message .= " Se ignoraron $ignoredCategory filas por no ser Categoría 6.";
+            }
+
+            return redirect()->route('transactions.index')->with('success', $message);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return back()->withErrors(['file' => 'Error al procesar el archivo: ' . $e->getMessage()]);
+        }
+    }
+
 }

@@ -40,6 +40,10 @@ Route::middleware('auth')->group(function () {
     // --- RUTAS DE GESTIÓN (CRUD) ---
     Route::resource('categorias', CategoryController::class)->parameters(['categorias' => 'category']);
     Route::resource('cuentas', AccountController::class)->parameters(['cuentas' => 'account']);
+
+    // --- IMPORTACIÓN DE TRANSACCIONES ---
+    Route::get('/transactions/import', [TransactionController::class, 'showImportForm'])->name('transactions.import.form');
+    Route::post('/transactions/import', [TransactionController::class, 'processImport'])->name('transactions.import.process');
     Route::resource('transactions', TransactionController::class)->only([
         'index', 'create', 'store', 'edit', 'update', 'destroy'
     ]);

@@ -9,11 +9,23 @@
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
                 Historial de Movimientos
             </h1>
-            <a href="{{ route('transactions.create') }}"
-               class="inline-flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Registrar Transacción
-            </a>
+            <div class="flex flex-col sm:flex-row gap-3 md:gap-4 md:justify-end">
+                <a href="{{ route('transactions.import.form') }}"
+                class="inline-flex justify-center items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 hover:shadow-lg group">
+                    <svg class="w-6 h-6 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <span>Importar Ventas</span>
+                </a>
+
+                <a href="{{ route('transactions.create') }}"
+                class="inline-flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 hover:shadow-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span>Registrar Transacción</span>
+                </a>
+            </div>
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 mb-6 border border-gray-100 dark:border-gray-700">
