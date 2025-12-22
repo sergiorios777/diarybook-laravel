@@ -70,4 +70,28 @@ class CashCountController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Muestra el historial de arqueos realizados.
+     */
+    public function history()
+    {
+        // Traemos los arqueos con la relación de usuario y cuenta para evitar consultas N+1
+        // Ordenamos por el más reciente
+        $counts = CashCount::with(['user', 'account'])
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(15);
+
+        return view('cash_counts.history', compact('counts'));
+    }
+
+    /**
+     * Muestra el detalle de un arqueo específico (Modo solo lectura).
+     */
+    public function show(CashCount $cashCount)
+    {
+        // Como definiste en el modelo protected $casts = ['details' => 'array'],
+        // $cashCount->details ya es un array PHP utilizable.
+        return view('cash_counts.show', compact('cashCount'));
+    }
 }
