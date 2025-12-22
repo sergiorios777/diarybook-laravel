@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Account;
+use App\Models\CashCount;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 class CashCountController extends Controller
 {
@@ -25,5 +27,71 @@ class CashCountController extends Controller
         return response()->json([
             'balance' => $account->current_balance
         ]);
+    }
+
+    // --- NUEVO MÉTODO PARA GUARDAR ---
+    public function store(Request $request)
+    {
+        // 1. Validamos datos básicos
+        $validated = $request->validate([
+            'account_id'      => 'nullable|exists:accounts,id',
+            'total_counted'   => 'required|numeric',
+            'system_balance'  => 'required|numeric',
+            'difference'      => 'required|numeric',
+            // Validamos que 'details' sea un array (coins y bills)
+            'details'         => 'required|array',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // 2. Creamos el registro
+            $cashCount = CashCount::create([
+                'user_id'        => auth()->id(), // El usuario logueado
+                'account_id'     => $validated['account_id'],
+                'total_counted'  => $validated['total_counted'],
+                'system_balance' => $validated['system_balance'],
+                'difference'     => $validated['difference'],
+                'details'        => $validated['details'], // Laravel lo pasa a JSON solo
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Arqueo guardado correctamente #' . $cashCount->id
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error al guardar: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Muestra el historial de arqueos realizados.
+     */
+    public function history()
+    {
+        // Traemos los arqueos con la relación de usuario y cuenta para evitar consultas N+1
+        // Ordenamos por el más reciente
+        $counts = CashCount::with(['user', 'account'])
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(15);
+
+        return view('cash_counts.history', compact('counts'));
+    }
+
+    /**
+     * Muestra el detalle de un arqueo específico (Modo solo lectura).
+     */
+    public function show(CashCount $cashCount)
+    {
+        // Como definiste en el modelo protected $casts = ['details' => 'array'],
+        // $cashCount->details ya es un array PHP utilizable.
+        return view('cash_counts.show', compact('cashCount'));
     }
 }

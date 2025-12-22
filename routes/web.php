@@ -46,7 +46,13 @@ Route::middleware('auth')->group(function () {
 
     // --- RUTA DE ARQUEO DE CAJA (CONTADOR) ---
     Route::get('/arqueo', [CashCountController::class, 'index'])->name('cash_counts.index');
+    Route::post('/arqueo', [CashCountController::class, 'store'])->name('cash_counts.store');
     Route::get('/cuentas/{account}/saldo', [CashCountController::class, 'getBalance'])->name('cuentas.balance');
+    // Historial
+    Route::get('/arqueos/historial', [CashCountController::class, 'history'])->name('cash_counts.history');
+
+    // Ver Detalle (usamos el ID del arqueo)
+    Route::get('/arqueos/{cashCount}', [CashCountController::class, 'show'])->name('cash_counts.show');
     
 });
 
